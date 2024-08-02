@@ -1,5 +1,9 @@
 const net = require('net');
 const fs = require('fs');
+const path = require('path');
+
+//File path
+const recievedFilePath = path.join(__dirname,'received_file');
 
 // Create a server object
 const server = net.createServer((socket) => {
@@ -13,8 +17,10 @@ const server = net.createServer((socket) => {
 
   socket.on('end', () => {
     console.log('File received');
+    fileStream.close(() => {
+     console.log('File stream closed'); 
   });
-
+  });
   socket.on('error', (err) => {
     console.error('Socket error:', err);
   });
@@ -32,6 +38,11 @@ server.on('error', (err) => {
 
 const net = require('net');
 const fs = require('fs');
+const path = require('path');
+
+//File path
+const recievedFilePath = path.join(__dirname,'file_to_send');
+
 
 // Create a connection to the server
 const client = net.createConnection({ port: 4000, host: 'RECEIVER_MACHINE_IP' }, () => {
@@ -44,6 +55,7 @@ const client = net.createConnection({ port: 4000, host: 'RECEIVER_MACHINE_IP' },
   fileStream.pipe(client);
 
   fileStream.on('end', () => {
+    console.log('file sent');
     client.end();
   });
 
@@ -53,7 +65,7 @@ const client = net.createConnection({ port: 4000, host: 'RECEIVER_MACHINE_IP' },
 });
 
 client.on('end', () => {
-  console.log('File sent');
+  console.log('disconnected from server');
 });
 
 client.on('error', (err) => {
