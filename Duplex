@@ -1,0 +1,118 @@
+To create a Node.js application that can act as both a sender and receiver on different machines in the same network, we need to combine the client and server functionalities in a single script. This script will listen for incoming connections to receive data and also initiate a connection to send data.
+
+Here is the complete code to achieve this:
+
+### Bidirectional Communication Script (`bidirectional.js`)
+
+This script will handle both sending and receiving data:
+
+```javascript
+const net = require('net');
+const fs = require('fs');
+const path = require('path');
+
+// Configuration
+const RECEIVER_IP = 'RECEIVER_MACHINE_IP'; // Replace with the IP of the other machine
+const FILE_TO_SEND = path.join(__dirname, 'example.txt');
+const RECEIVED_FILE_PATH = path.join(__dirname, 'received_example.txt');
+const PORT = 4000;
+
+// Function to handle file sending
+function sendFile(socket, filePath) {
+  const fileStream = fs.createReadStream(filePath);
+  fileStream.pipe(socket);
+
+  fileStream.on('end', () => {
+    console.log('File sent');
+    socket.end();
+  });
+
+  fileStream.on('error', (err) => {
+    console.error('File stream error:', err);
+  });
+}
+
+// Function to handle file receiving
+function receiveFile(socket, filePath) {
+  const fileStream = fs.createWriteStream(filePath);
+  socket.pipe(fileStream);
+
+  socket.on('end', () => {
+    console.log('File received');
+    fileStream.close(() => {
+      console.log('File stream closed');
+    });
+  });
+
+  socket.on('error', (err) => {
+    console.error('Socket error:', err);
+  });
+}
+
+// Create a server to receive data
+const server = net.createServer((socket) => {
+  console.log('Client connected');
+  receiveFile(socket, RECEIVED_FILE_PATH);
+
+  socket.on('data', (data) => {
+    console.log('Received from client:', data.toString());
+  });
+
+  socket.on('end', () => {
+    // Optionally send a response to the client
+    socket.write('File transfer complete', () => {
+      console.log('Response sent to client');
+    });
+  });
+});
+
+server.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
+});
+
+server.on('error', (err) => {
+  console.error('Server error:', err);
+});
+
+// Create a client to send data
+const client = net.createConnection({ port: PORT, host: RECEIVER_IP }, () => {
+  console.log('Connected to server');
+  sendFile(client, FILE_TO_SEND);
+});
+
+client.on('data', (data) => {
+  console.log('Received from server:', data.toString());
+});
+
+client.on('end', () => {
+  console.log('Disconnected from server');
+});
+
+client.on('error', (err) => {
+  console.error('Client error:', err);
+});
+```
+
+### Steps to Set Up and Run
+
+1. **Prepare the Directory Structure**:
+   - Create a directory for the script, e.g., `bidirectional`.
+   - Place `bidirectional.js` and `example.txt` in this directory.
+
+2. **Update Configuration**:
+   - Replace `'RECEIVER_MACHINE_IP'` with the actual IP address of the other machine.
+   - Ensure that `example.txt` exists in the directory.
+
+3. **Run the Script**:
+   - Copy `bidirectional.js` and `example.txt` to both machines.
+   - Open a terminal on both machines.
+   - Navigate to the directory containing `bidirectional.js`.
+   - Run the script on both machines: `node bidirectional.js`.
+
+4. **Verify the Communication**:
+   - The script should start listening for incoming connections on both machines.
+   - Each machine should also connect to the other machine and send `example.txt`.
+   - Check for the presence of `received_example.txt` on both machines, which should contain the content of the sent file.
+   - Console logs on both machines should indicate the connection, file sending, file receiving, and any received messages.
+
+By following these steps, you will have a Node.js application running on two different Linux machines in the same network, each capable of both sending and receiving files, demonstrating bidirectional communication.
