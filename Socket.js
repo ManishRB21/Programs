@@ -2,89 +2,85 @@ const net = require('net');
 const fs = require('fs');
 const path = require('path');
 
-//File path
-const recievedFilePath = path.join(__dirname,'received_file');
+// Configuration
+const IS_SENDER = process.env.IS_SENDER === 'true'; // Use environment variable to set the role
+const RECEIVER_IP = '10.221.44.42'; // IP of the receiver (PC2)
+const FILE_TO_SEND = path.join(__dirname, 'example.txt'); // File to send
+const RECEIVED_FILE_PATH = path.join(__dirname, 'received_example.txt'); // File to save received data
+const PORT = 4000;
 
-// Create a server object
-const server = net.createServer((socket) => {
-  console.log('Client connected');
-  
-  // Create a writable stream to save the received file
-  const fileStream = fs.createWriteStream('received_file');
-
-  // Pipe the socket data to the file stream
-  socket.pipe(fileStream);
-
-  socket.on('end', () => {
-    console.log('File received');
-    fileStream.close(() => {
-     console.log('File stream closed'); 
-  });
-  });
-  socket.on('error', (err) => {
-    console.error('Socket error:', err);
-  });
-});
-
-// Listen on port 4000
-server.listen(4000, () => {
-  console.log('Server listening on port 4000');
-});
-
-server.on('error', (err) => {
-  console.error('Server error:', err);
-});
-
-
-const net = require('net');
-const fs = require('fs');
-const path = require('path');
-
-//File path
-const recievedFilePath = path.join(__dirname,'file_to_send');
-
-
-// Create a connection to the server
-const client = net.createConnection({ port: 4000, host: 'RECEIVER_MACHINE_IP' }, () => {
-  console.log('Connected to server');
-
-  // Create a readable stream to read the file
-  const fileStream = fs.createReadStream('file_to_send');
-
-  // Pipe the file stream to the socket
-  fileStream.pipe(client);
+// Function to handle file sending
+function sendFile(socket, filePath) {
+  const fileStream = fs.createReadStream(filePath);
+  fileStream.pipe(socket);
 
   fileStream.on('end', () => {
-    console.log('file sent');
-    client.end();
+    console.log('File sent');
+    socket.end();
   });
 
   fileStream.on('error', (err) => {
     console.error('File stream error:', err);
   });
-});
+}
 
-client.on('end', () => {
-  console.log('disconnected from server');
-});
+// Function to handle file receiving
+function receiveFile(socket, filePath) {
+  const fileStream = fs.createWriteStream(filePath);
+  socket.pipe(fileStream);
 
-client.on('error', (err) => {
-  console.error('Client error:', err);
-});
+  socket.on('end', () => {
+    console.log('File received');
+    fileStream.close(() => {
+      console.log('File stream closed');
+    });
+  });
 
-Steps to Run the Code
-Set up the server:
-Copy the server.js file to the receiver machine.
-Open a terminal on the receiver machine.
-Navigate to the directory containing server.js.
-Run the server: node server.js.
-Set up the client:
-Copy the client.js file to the sender machine.
-Make sure you have a file named file_to_send in the same directory as client.js.
-Open a terminal on the sender machine.
-Navigate to the directory containing client.js.
-Replace 'RECEIVER_MACHINE_IP' in client.js with the actual IP address of the receiver machine.
-Run the client: node client.js.
+  socket.on('error', (err) => {
+    console.error('Socket error:', err);
+  });
+}
 
+if (IS_SENDER) {
+  // Create a client to send data
+  const client = net.createConnection({ port: PORT, host: RECEIVER_IP }, () => {
+    console.log('Connected to server');
+    sendFile(client, FILE_TO_SEND);
+  });
 
+  client.on('data', (data) => {
+    console.log('Received from server:', data.toString());
+  });
 
+  client.on('end', () => {
+    console.log('Disconnected from server');
+  });
+
+  client.on('error', (err) => {
+    console.error('Client error:', err);
+  });
+} else {
+  // Create a server to receive data
+  const server = net.createServer((socket) => {
+    console.log('Client connected');
+    receiveFile(socket, RECEIVED_FILE_PATH);
+
+    socket.on('data', (data) => {
+      console.log('Received from client:', data.toString());
+    });
+
+    socket.on('end', () => {
+      socket.write('File transfer complete', () => {
+        console.log('Response sent to client');
+      });
+    });
+  });
+
+  server.listen(PORT, () => {
+    console.log(`Server listening on port ${PORT}`);
+  });
+
+  server.on('error', (err) => {
+    console.error('Server error:', err);
+  });
+}
