@@ -1,58 +1,63 @@
-#include <iostream>
-using namespace std;
-class Node
-{
-public:
+const net = require('net');
+const fs = require('fs');
+const path = require('path');
 
-int data;
-Node *next;
-Node *prev;
+// Configuration
+const PORT = 5000; // Port to listen on
+const FILE_TO_SEND = 'file_to_send.txt'; // File to send (use an empty string if not sending)
+const OUTPUT_FILE = 'received_file'; // Name of the file to save
 
+// Handle receiving files
+const startServer = () => {
+    const server = net.createServer((socket) => {
+        console.log('Receiving file...');
+        const writeStream = fs.createWriteStream(path.join(__dirname, OUTPUT_FILE));
+        
+        socket.pipe(writeStream);
+        
+        socket.on('end', () => {
+            console.log('File received successfully.');
+        });
+        
+        socket.on('error', (err) => {
+            console.error('Error:', err.message);
+        });
+    });
+    
+    server.listen(PORT, () => {
+        console.log(`Listening for incoming connections on port ${PORT}`);
+    });
 };
 
-void push(Node** head, int newdata)
-
-{
-Node* newnode = new Node();
-newnode->data = newdata;
-newnode->prev = NULL;
-newnode->next = (*head);
-if((*head) != NULL)
-(*head)->prev = newnode ;
-(*head) = newnode;
-}
-
-void traverse(Node *node)
-{
-while(node != NULL){
-cout << node->data << " ";
-node = node->next;}
-}
-
-void revtraverse(Node **head){
-
-	Node* tail = *head;
-    while (tail->next != NULL) {
-        tail = tail->next;
+// Handle sending files
+const sendFile = (host) => {
+    if (!fs.existsSync(FILE_TO_SEND)) {
+        console.error('Error: File to send does not exist.');
+        return;
     }
 
-    while (tail != *head) {
-   cout << tail->data << " ";
-        tail = tail->prev;
-    }
-    cout << tail->data << endl;;
-}
+    const client = new net.Socket();
 
-int main(){
+    client.connect(PORT, host, () => {
+        console.log('Connected to receiver');
+        const readStream = fs.createReadStream(path.join(__dirname, FILE_TO_SEND));
+        readStream.pipe(client);
+    });
 
-Node* head = NULL;
-push(&head, 7);
-push(&head, 5);
-push(&head, 3);
-push(&head, 2);
-cout << "Original Linked list" << endl;
-traverse(head);
-cout << "\nReversed Linked list" << endl;
-revtraverse(&head);
-return 0;
-}
+    client.on('error', (err) => {
+        console.error('Error:', err.message);
+    });
+
+    client.on('close', () => {
+        console.log('Connection closed');
+    });
+};
+
+// Start server and client logic
+const host = 'receiver_ip'; // Replace with the IP address of the receiver if you want to send a file
+
+// Start server
+startServer();
+
+// Optionally start file sending (comment out if not needed)
+// sendFile(host);
