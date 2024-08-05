@@ -1,44 +1,59 @@
-#include<iostream>
-#include<string.h>
- 
-using namespace std;
- 
-void encryptMsg(char msg[], int key){
-    int msgLen = strlen(msg), i, j, k = -1, row = 0, col = 0;
-    char railMatrix[key][msgLen];
- 
-    for(i = 0; i < key; ++i)
-        for(j = 0; j < msgLen; ++j)
-            railMatrix[i][j] = '\n';
- 
-    for(i = 0; i < msgLen; ++i){
-        railMatrix[row][col++] = msg[i];
- 
-        if(row == 0 || row == key-1)
-            k= k * (-1);
- 
-        row = row + k;
-    }
- 
-    cout<<"\nEncrypted Message: ";
- 
-    for(i = 0; i < key; ++i)
-        for(j = 0; j < msgLen; ++j)
-            if(railMatrix[i][j] != '\n')
-                cout<<railMatrix[i][j];
-}
- 
-int main(){
-    char msg[];
-    int n = 10;
-    for(int i = 0; i < n; i++){
-    	cin>>msg[i];
-	}
-    int key = 3;
- 
-    cout<<"Original Message: "<<msg;
- 
-    encryptMsg(msg, key);
-    
-    return 0;
-}
+const net = require('net');
+const fs = require('fs');
+const path = require('path');
+
+const PORT = 5000; // Port to listen on
+const OUTPUT_FILE = 'received_file'; // Name of the file to save
+
+const server = net.createServer((socket) => {
+    console.log('Client connected');
+    const writeStream = fs.createWriteStream(path.join(__dirname, OUTPUT_FILE));
+
+    socket.pipe(writeStream);
+
+    socket.on('end', () => {
+        console.log('File received successfully.');
+    });
+
+    socket.on('error', (err) => {
+        console.error('Error:', err.message);
+    });
+});
+
+server.listen(PORT, () => {
+    console.log(`Server listening on port ${PORT}`);
+});
+/////////////////////////////////////////////
+
+file-transfer/
+├── server.js
+├── client.js
+└── file_to_send.txt (Only on sender system)
+
+
+///////////////////////////////////////////
+
+const net = require('net');
+const fs = require('fs');
+const path = require('path');
+
+const PORT = 5000; // Port of the receiver
+const HOST = 'receiver_ip'; // IP address of the receiving system
+const FILE_TO_SEND = 'file_to_send.txt'; // File to send
+
+const client = new net.Socket();
+
+client.connect(PORT, HOST, () => {
+    console.log('Connected to server');
+
+    const readStream = fs.createReadStream(path.join(__dirname, FILE_TO_SEND));
+    readStream.pipe(client);
+});
+
+client.on('error', (err) => {
+    console.error('Error:', err.message);
+});
+
+client.on('close', () => {
+    console.log('Connection closed');
+});
