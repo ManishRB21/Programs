@@ -43,7 +43,6 @@ https://www.youtube.com/watch?v=XQWO5Dh88h8 (github actions)
 
 
 
-## system design for ecommerce website
 
 ## Interview
 
@@ -52,8 +51,6 @@ https://www.ambitionbox.com/interviews/nutanix-question/split-the-string-you-are
 https://www.geeksforgeeks.org/check-if-a-string-can-be-split-into-3-substrings-such-that-one-of-them-is-a-substring-of-the-other-two/
 
 https://www.geeksforgeeks.org/find-whether-an-array-is-subset-of-another-array-set-1/
-
-Certainly! Here’s a GitHub-friendly README template that covers various design patterns in JavaScript, formatted with sections that include explanations, problem-solving insights, use cases, and interview-level code examples.
 
 ---
 
