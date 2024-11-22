@@ -1,0 +1,159 @@
+Given a shopping cart with products and coupons and calculate the net price after applying coupons on product. Coupons can be of different types with certain conditions.
+1. N% off that is 10% off for all the individual.
+2. D% off on Nth item of type T
+Sequentially wants to apply all the coupons on the cart and get Total amount.
+
+// ===== Observer Pattern (for notifications when a coupon is applied) =====
+class Observer {
+  update(product, coupon) {
+    // To be implemented by concrete observers
+  }
+}
+
+// Concrete observer to log coupon application
+class CouponLogger extends Observer {
+  update(product, coupon) {
+    console.log(
+      `Coupon '${coupon.name}' applied to product '${product.name}' - New Price: $${product.discountedPrice.toFixed(2)}`
+    );
+  }
+}
+
+// ===== Strategy Pattern (for different coupon behaviors) =====
+class DiscountStrategy {
+  applyDiscount(product) {
+    throw new Error("applyDiscount() must be implemented");
+  }
+}
+
+class PercentDiscountStrategy extends DiscountStrategy {
+  constructor(percent) {
+    super();
+    this.percent = percent;
+  }
+
+  applyDiscount(product) {
+    const discount = product.discountedPrice * (this.percent / 100);
+    product.discountedPrice -= discount;
+    return true; // Discount applied
+  }
+}
+
+class TypeBasedDiscountStrategy extends DiscountStrategy {
+  constructor(percent, type) {
+    super();
+    this.percent = percent;
+    this.type = type;
+  }
+
+  applyDiscount(product) {
+    if (product.type === this.type) {
+      const discount = product.discountedPrice * (this.percent / 100);
+      product.discountedPrice -= discount;
+      return true; // Discount applied
+    }
+    return false; // Discount not applied
+  }
+}
+
+// ===== Product Class =====
+class Product {
+  constructor(name, type, price) {
+    this.name = name;
+    this.type = type;
+    this.price = price;
+    this.discountedPrice = price; // Track discounted price
+    this.appliedCoupons = new Set(); // Track applied coupons
+  }
+
+  // Check if a coupon has already been applied
+  hasCouponApplied(coupon) {
+    return this.appliedCoupons.has(coupon);
+  }
+
+  // Mark a coupon as applied
+  markCouponAsApplied(coupon) {
+    this.appliedCoupons.add(coupon);
+  }
+}
+
+// ===== Coupon Class with Observer support =====
+class Coupon {
+  constructor(discountStrategy, name) {
+    this.discountStrategy = discountStrategy;
+    this.name = name; // Unique name or description for the coupon
+    this.observers = [];
+  }
+
+  applyCoupon(product) {
+    if (product.hasCouponApplied(this)) {
+      return; // Skip if this coupon was already applied
+    }
+
+    const discountApplied = this.discountStrategy.applyDiscount(product);
+    if (discountApplied) {
+      product.markCouponAsApplied(this); // Track applied coupon
+      this.notifyObservers(product); // Notify observers only if discount applied
+    }
+  }
+
+  attachObserver(observer) {
+    this.observers.push(observer);
+  }
+
+  notifyObservers(product) {
+    this.observers.forEach(observer => observer.update(product, this));
+  }
+}
+
+// ===== Factory Pattern for Coupon Creation =====
+class CouponFactory {
+  static createCoupon(type, value, condition) {
+    switch (type) {
+      case "percent":
+        return new Coupon(new PercentDiscountStrategy(value), `${value}% Off Everything`);
+      case "type_based":
+        return new Coupon(
+          new TypeBasedDiscountStrategy(value, condition.type),
+          `${value}% Off ${condition.type}`
+        );
+      default:
+        throw new Error("Unknown coupon type");
+    }
+  }
+}
+
+// ===== Calculation Logic =====
+function calculateTotal(cart, coupons) {
+  cart.forEach(product => {
+    coupons.forEach(coupon => {
+      coupon.applyCoupon(product); // Apply each coupon to each product
+    });
+  });
+
+  // Calculate the total amount after applying all coupons
+  return cart.reduce((total, product) => total + product.discountedPrice, 0);
+}
+
+// ===== Usage Example =====
+
+// Sample products
+const cart = [
+  new Product("Laptop", "electronics", 1000),
+  new Product("Sofa", "furniture", 500),
+];
+
+// Create coupons using Factory Pattern
+const coupons = [
+  CouponFactory.createCoupon("percent", 10), // 10% off everything
+  CouponFactory.createCoupon("type_based", 20, { type: "furniture" }), // 20% off furniture
+];
+
+// Attach observers (Logger) to coupons
+const logger = new CouponLogger();
+coupons.forEach(coupon => coupon.attachObserver(logger));
+
+// Calculate the total price of the cart after applying coupons
+const totalPrice = calculateTotal(cart, coupons);
+
+console.log("Total Price after applying coupons: $" + totalPrice.toFixed(2));
