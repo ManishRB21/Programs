@@ -1,0 +1,130 @@
+Design a backend system for a new enterprise application that Flipkart is launching, FlipFit.
+Flipkart is partnering up with gyms across Bangalore to enter into the fitness space. For the Beta launch the requirements are as follows:
+
+
+There are only 2 centers for now - Koramangala and Bellandur. We might expand to multiple others if we get traction.
+Each center has 6 slots. 3 in the morning of an hour each from 6am to 9am and similarly 3 in the evening from 6pm to 9pm. The centers are open 7 days a week.
+Each slot at a center can have only 2 possible workout variations for now - Weights and Cardio.
+The number of people that can attend each workout at each slot for a given station is fixed. Assume default slot capacity as 3(for every workout type across centers).
+Same User cannot book at the same center at the same slot and the same workout type twice.
+User can perform the following operations:
+Register onto the platform
+View the workouts for a particular day
+Book a workout for a user if seats are available in that time slot at that center
+View his/her plan based on day as input
+
+
+For simplicity’s sake you can assume that the workout info will be entered by the Admin only once.
+
+
+Bonus : Build an Admin view as well to modify the workout info at a center/slot level.
+Commands/Requirements:
+REGISTER
+Input: User name, User email, User Phone, User password
+Output: User Id (unique)
+VIEW the workouts for a day
+Input: Day
+Output: Center(Center ID, Center Name), Slot information(Slot ID, Slot timing, workout type, slot capacity)
+BOOKING: Check if the user is registered, Check for slot availability and finally book the slot.
+Input: User ID, Center ID, Slot ID, Day
+Output:
+Success: Booking ID, Slot information(Slot ID, Slot timing, workout type), Center information(Center ID, Center Name)
+
+
+View user plan according to the day:
+Input: User ID, Day
+Output: User information, Slot information( Slot timing, workout type), Center information(Center Name)
+Bonus Commands:
+ADMIN Update
+Input: Center Id, Slot Id, Slot Capacity
+ADMIN ADD
+Input: Center Id, Slot timing, Workout type, Slot Capacity
+
+
+Sample Test Cases:
+
+
+Register:
+registerUser(“Aashi”, “abc@gmail.com”, “123”,”xyz”) => aash123
+
+
+View the workouts for a day:
+viewWorkoutsForDay(12-03-20) =>
+Center ID: 1
+Center Name: Kormangla
+Slot ID: 1
+Slot Timing: 06 AM - 07 AM
+Workout type: Weights
+Slot capacity: 2
+
+
+Center ID: 1
+Center Name: Kormangla
+Slot ID: 2
+Slot Timing: 07 AM - 08 AM
+Workout type: Weights
+Slot capacity: 2
+
+
+Center ID: 1
+Center Name: Kormangla
+Slot ID: 3
+Slot Timing: 06 AM - 07 AM
+Workout type: Cardio
+Slot capacity: 0
+
+
+Center ID: 2
+Center Name: Bellandur
+Slot ID: 4
+Slot Timing: 06 AM - 07 AM
+Workout type: Weights
+Slot capacity: 2
+
+
+Booking:
+bookWorkout(aash123, 1, 1, 12-03-20) =>
+
+
+Booking ID: 123
+Slot ID: 1
+Slot timing: 06 AM - 07 AM
+Workout Type: Weights
+Center ID: 1
+Center Name: Kormangla
+
+
+View user plan:
+
+
+viewUserPlan(aash123, 12-03-20) =>
+
+
+User Name: Aashi
+Center Name: Kormangla
+Slot Timing: 06 AM - 07 AM
+Workout type: Weights
+
+
+Things to take care of:
+
+
+Do not use any database or NoSQL store, use in-memory store for now.
+Do not create any UI for the application.
+Write a driver class for demo purposes. Which will execute all the commands at one place in the code and test cases.
+Please prioritize code compilation, execution and completion.
+Please do not access the internet for anything EXCEPT syntax.
+You are free to use the language of your choice.
+All work should be your own. If found otherwise, you may be disqualified.
+
+
+Expectations:
+Code should be demoable (very important)
+Complete coding within the duration of 90 minutes.
+Prefer Design over optimization. Better design would be considered better.
+Code should be modular, with an Object Oriented design. Maintain good separation of concerns.
+Code should be extensible. It should be easy to add/remove functionality without rewriting the entire codebase.
+Code should handle edge cases properly and fail gracefully.
+Code should be readable. Follow good coding practices:
+Use intuitive variable names, function names, class names etc.
+Indent code properly.
