@@ -1,0 +1,479 @@
+// import PropTypes from 'prop-types';
+// import {Component} from 'react';
+
+// import $L, {toIString} from '@enact/i18n/$L';
+
+// import Button from '@enact/sandstone/Button';
+// import Marquee from '@enact/sandstone/Marquee';
+
+// import Spinner from '@enact/sandstone/Spinner';
+// import SwitchItem from '@enact/sandstone/SwitchItem';
+
+// import Spotlight from '@enact/spotlight';
+
+// import css from './DeveloperModeItem.module.less';
+// import {AppLog} from '../AppLog/AppLog';
+
+// class DeveloperModeItem extends Component {
+// 	constructor (props) {
+// 		super(props);
+
+// 		this.state = {
+// 			updateChecking: false
+// 		};
+
+// 		this.onRemove = this.onRemove.bind(this, {appId: props.appId});
+// 	}
+
+// 	componentDidMount () {
+// 		Spotlight.setPointerMode(false);
+// 	}
+
+// 	UNSAFE_componentWillReceiveProps (nextProps, nextState) {
+// 		if (this.state.updateChecking !== nextState.updateChecking && this.state.updateChecking) {
+// 			AppLog('update checking finished.');
+// 			this.setState(() => ({updateChecking: false}));
+// 		}
+// 	}
+
+// 	componentDidUpdate (prevProps, prevState) {
+// 		if (prevState.updateChecking !== this.state.updateChecking && !this.state.updateChecking) {
+// 			if (this.props.appUpdatable) {
+// 				Spotlight.focus(this.props.compId + '_updateButton');
+// 			} else {
+// 				Spotlight.focus(this.props.compId + '_checkForUpdateButton');
+// 			}
+
+// 			Spotlight.resume();
+// 		}
+// 	}
+
+// 	convertVersion = (currentVersion, appUpdatable, latestVersion) => {
+// 		let convertedVersion;
+
+// 		if (currentVersion === null) {
+// 			convertedVersion = $L('Available to install');
+// 		} else if (appUpdatable && (latestVersion > currentVersion)) {
+// 			convertedVersion = toIString($L('Available to use Ver {version}')).format({version: latestVersion}) + ' ' + toIString($L('Current Ver {version}')).format({version: currentVersion});
+// 		} else {
+// 			convertedVersion = toIString($L('Ver {version}')).format({version: currentVersion});
+// 		}
+
+// 		return convertedVersion;
+// 	};
+
+// 	onCheckForUpdate = () => {
+// 		Spotlight.pause();
+// 		AppLog('update checking started.');
+// 		this.setState(() => ({updateChecking: true}));
+// 		setTimeout(() => {
+// 			this.props.onCheckForUpdate();
+// 		}, 50);
+// 	};
+
+// 	onRemove = (param, ev) => {
+// 		this.props.onRemove(param.appId, ev);
+// 	};
+
+// 	render = () => {
+// 		const {appDownloadable, appUpdatable, compId, loginId, latestVersion, title, selected, switchSupported, version, onToggleSwitch, onInstall, onUpdate, ...rest} = this.props;
+// 		const {updateChecking} = this.state;
+// 		const switchContent = (selected ? $L('Enable') : $L('Disable'));
+
+// 		const convertedVersion = this.convertVersion(version, appUpdatable, latestVersion);
+
+// 		const appInstalled = (version && version !== null);
+// 		const logOn = (loginId && loginId !== null);
+
+// 		delete rest.appId;
+// 		delete rest.onCheckForUpdate;
+// 		delete rest.onRemove;
+
+// 		return (
+// 			<div className={css.itemContainer}>
+// 				<div>
+// 					<Marquee className={css.title} marqueeOn={'render'}>{title}</Marquee>
+// 					<Marquee className={css.version} marqueeOn={'render'}>{convertedVersion}</Marquee>
+// 				</div>
+// 				<span className={css.buttons}>
+// 					{appInstalled && switchSupported &&	<SwitchItem className={css.switchItem} inline selected={selected} onToggle={onToggleSwitch}>{switchContent}</SwitchItem>}
+// 					<Button spotlightId={compId + '_installButton'} className={appInstalled && switchSupported ? css.installBtn : ''} size="small" disabled={appInstalled || !(logOn && appDownloadable)} onClick={onInstall}>{appInstalled ? $L('Installed') : $L('Install')}</Button>
+// 					{appInstalled && <div className={css.updateButtonsDiv}>
+// 						{!appUpdatable && !updateChecking && <Button spotlightId={compId + '_checkForUpdateButton'} className={css.updateButton} size="small" disabled={!(logOn && appDownloadable)} onClick={this.onCheckForUpdate}>{$L('Check For Update')}</Button>}
+// 						{updateChecking && <Spinner className={css.spinner} />}
+// 						{appUpdatable && !updateChecking &&	<Button spotlightId={compId + '_updateButton'} className={css.updateButton} size="small" onClick={onUpdate}>{$L('Update')}</Button>}
+// 					</div>}
+// 					{appInstalled && <Button size="small" disabled={updateChecking} onClick={this.onRemove}>{$L('Remove')}</Button>}
+// 				</span>
+// 			</div>
+// 		);
+// 	};
+// }
+
+// DeveloperModeItem.propTypes = {
+// 	appDownloadable: PropTypes.bool,
+// 	appId: PropTypes.string,
+// 	appUpdatable: PropTypes.bool,
+// 	compId: PropTypes.string,
+// 	latestVersion: PropTypes.string,
+// 	loginId: PropTypes.string,
+// 	onCheckForUpdate: PropTypes.func,
+// 	onInstall: PropTypes.func,
+// 	onRemove: PropTypes.func,
+// 	onToggleSwitch: PropTypes.func,
+// 	onUpdate: PropTypes.func,
+// 	selected: PropTypes.bool,
+// 	switchSupported: PropTypes.bool,
+// 	title: PropTypes.string,
+// 	version: PropTypes.string
+// };
+
+// DeveloperModeItem.defaultProps = {
+// 	appDownloadable: false,
+// 	appId: null,
+// 	appUpdatable: false,
+// 	compId: 'devItem',
+// 	latestVersion: null,
+// 	loginId: null,
+// 	selected: false,
+// 	switchSupported: false,
+// 	title: '',
+// 	version: null
+// };
+
+// export default DeveloperModeItem;
+
+
+
+
+// import PropTypes from 'prop-types';
+// import {Component} from 'react';
+
+// import $L, {toIString} from '@enact/i18n/$L';
+
+// import Button from '@enact/sandstone/Button';
+// import Marquee from '@enact/sandstone/Marquee';
+
+// import Spinner from '@enact/sandstone/Spinner';
+// import SwitchItem from '@enact/sandstone/SwitchItem';
+
+// import Spotlight from '@enact/spotlight';
+
+// import css from './DeveloperModeItem.module.less';
+// import {AppLog} from '../AppLog/AppLog';
+
+// class DeveloperModeItem extends Component {
+// 	constructor (props) {
+// 		super(props);
+
+// 		this.state = {
+// 			updateChecking: false,
+// 			selected: false  // Default value set here
+// 		};
+
+// 		this.onRemove = this.onRemove.bind(this, {appId: props.appId});
+// 	}
+
+// 	componentDidMount () {
+// 		Spotlight.setPointerMode(false);
+// 	}
+
+// 	UNSAFE_componentWillReceiveProps (nextProps, nextState) {
+// 		if (this.state.updateChecking !== nextState.updateChecking && this.state.updateChecking) {
+// 			AppLog('update checking finished.');
+// 			this.setState(() => ({updateChecking: false}));
+// 		}
+// 	}
+
+// 	componentDidUpdate (prevProps, prevState) {
+// 		if (prevState.updateChecking !== this.state.updateChecking && !this.state.updateChecking) {
+// 			if (this.props.appUpdatable) {
+// 				Spotlight.focus(this.props.compId + '_updateButton');
+// 			} else {
+// 				Spotlight.focus(this.props.compId + '_checkForUpdateButton');
+// 			}
+
+// 			Spotlight.resume();
+// 		}
+// 	}
+
+// 	convertVersion = (currentVersion, appUpdatable, latestVersion) => {
+// 		let convertedVersion;
+
+// 		if (currentVersion === null) {
+// 			convertedVersion = $L('Available to install');
+// 		} else if (appUpdatable && (latestVersion > currentVersion)) {
+// 			convertedVersion = toIString($L('Available to use Ver {version}')).format({version: latestVersion}) + ' ' + toIString($L('Current Ver {version}')).format({version: currentVersion});
+// 		} else {
+// 			convertedVersion = toIString($L('Ver {version}')).format({version: currentVersion});
+// 		}
+
+// 		return convertedVersion;
+// 	};
+
+// 	onCheckForUpdate = () => {
+// 		Spotlight.pause();
+// 		AppLog('update checking started.');
+// 		this.setState(() => ({updateChecking: true}));
+// 		setTimeout(() => {
+// 			this.props.onCheckForUpdate();
+// 		}, 50);
+// 	};
+
+// 	onToggleSwitch = () => {
+// 		this.setState((prevState) => ({
+// 			selected: !prevState.selected
+// 		}));
+// 	};
+
+// 	onRemove = (param, ev) => {
+// 		this.props.onRemove(param.appId, ev);
+// 	};
+
+// 	render = () => {
+// 		const {appDownloadable, appUpdatable, compId, loginId, latestVersion, title, switchSupported, version, onInstall, onUpdate, ...rest} = this.props;
+// 		const {updateChecking, selected} = this.state;
+// 		const switchContent = (selected ? $L('Enable') : $L('Disable'));
+
+// 		const convertedVersion = this.convertVersion(version, appUpdatable, latestVersion);
+
+// 		const appInstalled = (version && version !== null);
+// 		const logOn = (loginId && loginId !== null);
+
+// 		delete rest.appId;
+// 		delete rest.onCheckForUpdate;
+// 		delete rest.onRemove;
+
+// 		return (
+// 			<div className={css.itemContainer}>
+// 				<div>
+// 					<Marquee className={css.title} marqueeOn={'render'}>{title}</Marquee>
+// 					<Marquee className={css.version} marqueeOn={'render'}>{convertedVersion}</Marquee>
+// 				</div>
+// 				<span className={css.buttons}>
+// 					{appInstalled && switchSupported &&
+// 						<SwitchItem className={css.switchItem} inline selected={selected} onToggle={this.onToggleSwitch}>
+// 							{switchContent}
+// 						</SwitchItem>}
+// 					<Button spotlightId={compId + '_installButton'} className={appInstalled && switchSupported ? css.installBtn : ''} size="small" disabled={appInstalled || !(logOn && appDownloadable)} onClick={onInstall}>
+// 						{appInstalled ? $L('Installed') : $L('Install')}
+// 					</Button>
+// 					{appInstalled && <div className={css.updateButtonsDiv}>
+// 						{!appUpdatable && !updateChecking &&
+// 							<Button spotlightId={compId + '_checkForUpdateButton'} className={css.updateButton} size="small" disabled={!(logOn && appDownloadable)} onClick={this.onCheckForUpdate}>
+// 								{$L('Check For Update')}
+// 							</Button>}
+// 						{updateChecking && <Spinner className={css.spinner} />}
+// 						{appUpdatable && !updateChecking &&
+// 							<Button spotlightId={compId + '_updateButton'} className={css.updateButton} size="small" onClick={onUpdate}>
+// 								{$L('Update')}
+// 							</Button>}
+// 					</div>}
+// 					{appInstalled &&
+// 						<Button size="small" disabled={updateChecking} onClick={this.onRemove}>
+// 							{$L('Remove')}
+// 						</Button>}
+// 				</span>
+// 			</div>
+// 		);
+// 	};
+// }
+
+// DeveloperModeItem.propTypes = {
+// 	appDownloadable: PropTypes.bool,
+// 	appId: PropTypes.string,
+// 	appUpdatable: PropTypes.bool,
+// 	compId: PropTypes.string,
+// 	latestVersion: PropTypes.string,
+// 	loginId: PropTypes.string,
+// 	onCheckForUpdate: PropTypes.func,
+// 	onInstall: PropTypes.func,
+// 	onRemove: PropTypes.func,
+// 	onUpdate: PropTypes.func,
+// 	switchSupported: PropTypes.bool,
+// 	title: PropTypes.string,
+// 	version: PropTypes.string
+// };
+
+// DeveloperModeItem.defaultProps = {
+// 	appDownloadable: false,
+// 	appId: null,
+// 	appUpdatable: false,
+// 	compId: 'devItem',
+// 	latestVersion: null,
+// 	loginId: null,
+// 	switchSupported: false,
+// 	title: '',
+// 	version: null
+// };
+
+// export default DeveloperModeItem;
+
+
+
+
+
+import PropTypes from 'prop-types';
+import {Component} from 'react';
+
+import $L, {toIString} from '@enact/i18n/$L';
+
+import Button from '@enact/sandstone/Button';
+import Marquee from '@enact/sandstone/Marquee';
+
+import Spinner from '@enact/sandstone/Spinner';
+import SwitchItem from '@enact/sandstone/SwitchItem';
+
+import Spotlight from '@enact/spotlight';
+
+import css from './DeveloperModeItem.module.less';
+import {AppLog} from '../AppLog/AppLog';
+
+class DeveloperModeItem extends Component {
+	constructor (props) {
+		super(props);
+
+		this.state = {
+			updateChecking: false,
+			selected: false  // Default value set here
+		};
+
+		this.onRemove = this.onRemove.bind(this, {appId: props.appId});
+	}
+
+	componentDidMount () {
+		Spotlight.setPointerMode(false);
+	}
+
+	UNSAFE_componentWillReceiveProps (nextProps, nextState) {
+		if (this.state.updateChecking !== nextState.updateChecking && this.state.updateChecking) {
+			AppLog('update checking finished.');
+			this.setState(() => ({updateChecking: false}));
+		}
+	}
+
+	componentDidUpdate (prevProps, prevState) {
+		if (prevState.updateChecking !== this.state.updateChecking && !this.state.updateChecking) {
+			if (this.props.appUpdatable) {
+				Spotlight.focus(this.props.compId + '_updateButton');
+			} else {
+				Spotlight.focus(this.props.compId + '_checkForUpdateButton');
+			}
+
+			Spotlight.resume();
+		}
+	}
+
+	convertVersion = (currentVersion, appUpdatable, latestVersion) => {
+		let convertedVersion;
+
+		if (currentVersion === null) {
+			convertedVersion = $L('Available to install');
+		} else if (appUpdatable && (latestVersion > currentVersion)) {
+			convertedVersion = toIString($L('Available to use Ver {version}')).format({version: latestVersion}) + ' ' + toIString($L('Current Ver {version}')).format({version: currentVersion});
+		} else {
+			convertedVersion = toIString($L('Ver {version}')).format({version: currentVersion});
+		}
+
+		return convertedVersion;
+	};
+
+	onCheckForUpdate = () => {
+		Spotlight.pause();
+		AppLog('update checking started.');
+		this.setState(() => ({updateChecking: true}));
+		setTimeout(() => {
+			this.props.onCheckForUpdate();
+		}, 50);
+	};
+
+	onToggleSwitch = () => {
+		const selected = !this.state.selected;
+		
+		this.setState(() => ({selected}));
+		this.props.onToggleSwitch(selected); // Call the prop function
+	};
+
+	onRemove = (param, ev) => {
+		this.props.onRemove(param.appId, ev);
+	};
+
+	render = () => {
+		const {appDownloadable, appUpdatable, compId, loginId, latestVersion, title, switchSupported, version, onInstall, onUpdate, ...rest} = this.props;
+		const {updateChecking, selected} = this.state;
+		const switchContent = (selected ? $L('Enable') : $L('Disable'));
+
+		const convertedVersion = this.convertVersion(version, appUpdatable, latestVersion);
+
+		const appInstalled = (version && version !== null);
+		const logOn = (loginId && loginId !== null);
+
+		delete rest.appId;
+		delete rest.onCheckForUpdate;
+		delete rest.onRemove;
+
+		return (
+			<div className={css.itemContainer}>
+				<div>
+					<Marquee className={css.title} marqueeOn={'render'}>{title}</Marquee>
+					<Marquee className={css.version} marqueeOn={'render'}>{convertedVersion}</Marquee>
+				</div>
+				<span className={css.buttons}>
+					{appInstalled && switchSupported &&
+						<SwitchItem className={css.switchItem} inline selected={selected} onToggle={this.onToggleSwitch}>
+							{switchContent}
+						</SwitchItem>}
+					<Button spotlightId={compId + '_installButton'} className={appInstalled && switchSupported ? css.installBtn : ''} size="small" disabled={appInstalled || !(logOn && appDownloadable)} onClick={onInstall}>
+						{appInstalled ? $L('Installed') : $L('Install')}
+					</Button>
+					{appInstalled && <div className={css.updateButtonsDiv}>
+						{!appUpdatable && !updateChecking &&
+							<Button spotlightId={compId + '_checkForUpdateButton'} className={css.updateButton} size="small" disabled={!(logOn && appDownloadable)} onClick={this.onCheckForUpdate}>
+								{$L('Check For Update')}
+							</Button>}
+						{updateChecking && <Spinner className={css.spinner} />}
+						{appUpdatable && !updateChecking &&
+							<Button spotlightId={compId + '_updateButton'} className={css.updateButton} size="small" onClick={onUpdate}>
+								{$L('Update')}
+							</Button>}
+					</div>}
+					{appInstalled &&
+						<Button size="small" disabled={updateChecking} onClick={this.onRemove}>
+							{$L('Remove')}
+						</Button>}
+				</span>
+			</div>
+		);
+	};
+}
+
+DeveloperModeItem.propTypes = {
+	appDownloadable: PropTypes.bool,
+	appId: PropTypes.string,
+	appUpdatable: PropTypes.bool,
+	compId: PropTypes.string,
+	latestVersion: PropTypes.string,
+	loginId: PropTypes.string,
+	onCheckForUpdate: PropTypes.func,
+	onInstall: PropTypes.func,
+	onRemove: PropTypes.func,
+	onUpdate: PropTypes.func,
+	onToggleSwitch: PropTypes.func.isRequired,
+	switchSupported: PropTypes.bool,
+	title: PropTypes.string,
+	version: PropTypes.string
+};
+
+DeveloperModeItem.defaultProps = {
+	appDownloadable: false,
+	appId: null,
+	appUpdatable: false,
+	compId: 'devItem',
+	latestVersion: null,
+	loginId: null,
+	switchSupported: false,
+	title: '',
+	version: null
+};
+
+export default DeveloperModeItem;
