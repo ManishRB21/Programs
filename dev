@@ -1,0 +1,954 @@
+// import {Component} from 'react';
+// import PropTypes from 'prop-types';
+// import {connect} from 'react-redux';
+
+// import Job from '@enact/core/util/Job';
+// import $L, {toIString} from '@enact/i18n/$L';
+
+// import Button from '@enact/sandstone/Button';
+// import Alert from '@enact/sandstone/Alert';
+// import Cancelable from '@enact/ui/Cancelable';
+// import Spotlight from '@enact/spotlight';
+
+// import {pushPath, popPath, launchApp} from '../../actions';
+// import * as DeveloperModeAction from '../../actions/developerModeAction';
+
+// import AppLog from '../../components/AppLog';
+// import DeveloperModeItem from '../../components/DeveloperModeItem';
+// import SettingsPanel from '../../components/SettingsPanel';
+// import SettingsScroller from '../../components/SettingsScroller';
+// import NameMap from '../../constants/NameMap';
+// import LoadingAlert from '../../components/LoadingAlert/LoadingAlert';
+
+// const CancelableDiv = Cancelable({modal: true, onCancel: 'handleMainCancel'}, 'div');
+
+// class DeveloperMode extends Component {
+// 	constructor (props) {
+// 		super(props);
+
+// 		// app info
+// 		this.installingAppInfo = {
+// 			appId: '',
+// 			title: '',
+// 			updateType: ''
+// 		};
+
+// 		this.removingAppInfo = {
+// 			appId: '',
+// 			title: ''
+// 		};
+
+// 		// dialog / notification state
+// 		this.state = {
+// 			beanviserServiceEnabled: false,
+// 			installDialogOpen: false,
+// 			completeDialogOpen: false,
+// 			errorDialogOpen: false,
+// 			removeNotificationOpen: false
+// 		};
+
+// 		// initial app id
+// 		this.DEVMODE_APP_ID = NameMap.DEVMODE_APP_ID;
+// 		this.BEANVISER_APP_ID = NameMap.BEANVISER_APP_ID;
+
+// 		this.handleBackKey = this.handleBackKey.bind(this);
+
+// 		// path transition
+// 		this.enterDeveloperModeLogin = props.pushPath.bind(this, 'DeveloperModeLogin');
+
+// 		// calling props
+// 		this.installApp = this.installApp.bind(this);
+// 		this.removeApp = this.removeApp.bind(this);
+// 		this.hideDialog = this.hideDialog.bind(this);
+
+// 		// check for update
+// 		this.checkDevModeAppForUpdate = this.checkForUpdate.bind(this, this.DEVMODE_APP_ID, props.devModeAppInfo.appVersion);
+// 		this.checkBeanviserAppForUpdate = this.checkForUpdate.bind(this, this.BEANVISER_APP_ID, props.beanviserAppInfo.appVersion);
+
+// 		// install(update) dialog
+// 		this.showInstallDialog = this.showInstallDialog.bind(this);
+// 		this.installDevModeApp = this.showInstallDialog.bind(this, this.DEVMODE_APP_ID, props.devModeAppInfo.appTitle, 'install');
+// 		this.installBeanviserApp = this.showInstallDialog.bind(this, this.BEANVISER_APP_ID, props.beanviserAppInfo.appTitle, 'install');
+// 		this.updateDevModeApp = this.showInstallDialog.bind(this, this.DEVMODE_APP_ID, props.devModeAppInfo.appTitle, 'update');
+// 		this.updateBeanviserApp = this.showInstallDialog.bind(this, this.BEANVISER_APP_ID, props.beanviserAppInfo.appTitle, 'update');
+
+// 		// complete dialog
+// 		this.showCompleteDialog = this.showCompleteDialog.bind(this);
+
+// 		// error dialog
+// 		this.showErrorDialog = this.showErrorDialog.bind(this);
+
+// 		// remove notification
+// 		this.showRemoveNotification = this.showRemoveNotification.bind(this);
+// 		this.hideRemoveNotification = this.hideRemoveNotification.bind(this);
+// 		this.removeDevModeApp = this.showRemoveNotification.bind(this, this.DEVMODE_APP_ID, props.devModeAppInfo.appTitle);
+// 		this.removeBeanviserApp = this.showRemoveNotification.bind(this, this.BEANVISER_APP_ID, props.beanviserAppInfo.appTitle);
+// 		this.notificationNoBtnTapped = this.hideRemoveNotification.bind(this, {senderName: 'noBtn'});
+// 		this.notificationYesBtnTapped = this.hideRemoveNotification.bind(this, {senderName: 'yesBtn'});
+// 	}
+
+// 	componentDidMount () {
+// 		Spotlight.setPointerMode(false);
+
+// 		this.focusToLoginButton();
+// 		this.props.getAppInfo(this.DEVMODE_APP_ID);
+// 		this.props.getAppInfo(this.BEANVISER_APP_ID);
+// 		this.props.getBeanviserState();
+// 		this.props.checkDownloadableApp();
+// 	}
+
+// 	UNSAFE_componentWillReceiveProps (nextProps) {
+// 		// reserved
+// 		if (this.props.errorStatus !== nextProps.errorStatus) {
+// 			if (nextProps.errorStatus.errorCode === 30) {
+// 				this.showCompleteDialog();
+// 			} else {
+// 				this.showErrorDialog();
+// 			}
+// 		}
+// 		if (this.props.devModeAppInfo.appVersion !== nextProps.devModeAppInfo.appVersion) {
+// 			this.checkDevModeAppForUpdate = this.checkForUpdate.bind(this, this.DEVMODE_APP_ID, nextProps.devModeAppInfo.appVersion);
+// 		}
+// 		if (this.props.beanviserAppInfo.appVersion !== nextProps.beanviserAppInfo.appVersion) {
+// 			this.checkBeanviserAppForUpdate = this.checkForUpdate.bind(this, this.BEANVISER_APP_ID, nextProps.beanviserAppInfo.appVersion);
+
+// 			if (nextProps.beanviserAppInfo.appVersion !== null && this.restartBeanviserAfterUpdate) {
+// 				this.setBeanviserState({selected: true});
+// 				this.restartBeanviserAfterUpdate = false;
+// 			}
+// 		}
+// 		if (this.props.beanviserAppInfo.serviceEnabled !== nextProps.beanviserAppInfo.serviceEnabled) {
+// 			this.setState(() => ({beanviserServiceEnabled: nextProps.beanviserAppInfo.serviceEnabled}));
+// 		}
+// 	}
+
+// 	componentDidUpdate (prevProps) {
+// 		// update spotlight after logging in/out
+// 		if ((prevProps.loginInfo.loginId !== this.props.loginInfo.loginId) ||
+// 			(prevProps.devModeAppInfo.appVersion !== this.props.devModeAppInfo.appVersion && this.props.devModeAppInfo.appVersion === null)) {
+// 			this.focusToLoginButton();
+// 		}
+// 	}
+
+// 	// function
+// 	installApp = (appId, updateType) => {
+// 		// get Download info -> Download -> Install -> Add Launchpoint (when visible false);
+// 		this.props.getAppInstallationInfo(appId, updateType);
+// 	};
+
+// 	checkForUpdate = (appId, appVer) => {
+// 		// check for update
+// 		this.props.checkForUpdate(appId, appVer);
+// 	};
+
+// 	removeApp = (appId) => {
+// 		if (appId === this.BEANVISER_APP_ID && this.state.beanviserServiceEnabled) {
+// 			this.setBeanviserState({selected: false}, true);	// pauses spotlight while removing is in progress
+// 		}
+// 		this.props.removeApp(appId);
+// 	};
+
+// 	setBeanviserState = (ev, pauseSpotlight) => {
+// 		Spotlight.pause();
+
+// 		this.setState(() => ({beanviserServiceEnabled: ev.selected}));
+// 		this.props.setBeanviserState(ev.selected, pauseSpotlight);
+// 	};
+
+// 	// spotlight
+// 	focusToLoginButton = () => {
+// 		Spotlight.focus('loginBtn');
+// 	};
+
+// 	focusCheckForUpdateButton = () => {
+// 		const prefix = this.installingAppInfo.appId === this.DEVMODE_APP_ID ? 'devmode' : 'beanviser';
+// 		const node = document.querySelector(`[data-spotlight-id=${prefix}_checkForUpdateButton]`);
+
+// 		if (Spotlight.isSpottable(node)) {
+// 			Spotlight.focus(prefix + '_checkForUpdateButton');
+// 		}
+// 		this.hideDialog();
+// 	};
+
+// 	focusInstallButton = () => {
+// 		const prefix = this.installingAppInfo.appId === this.DEVMODE_APP_ID ? 'devmode' : 'beanviser';
+// 		const node = document.querySelector(`[data-spotlight-id=${prefix}_installButton]`);
+
+// 		if (Spotlight.isSpottable(node)) {
+// 			Spotlight.focus(prefix + '_installButton');
+// 		} else {
+// 			this.focusToLoginButton();
+// 		}
+// 		this.hideDialog();
+// 	};
+
+// 	// render
+// 	showInstallDialog = (appId, appTitle, updateType, ev) => {
+// 		this.hideDialog();
+
+// 		this.installingAppInfo = {
+// 			appId: appId,
+// 			title: appTitle,
+// 			updateType: updateType
+// 		};
+
+// 		AppLog(ev);
+
+// 		if (appId === this.BEANVISER_APP_ID && updateType === 'update') {
+// 			this.restartBeanviserAfterUpdate = this.state.beanviserServiceEnabled;
+// 			this.setBeanviserState({selected: false}, true);
+// 		}
+
+// 		this.installApp(appId, updateType);
+// 		this.setState(() => ({installDialogOpen: true}));
+// 		Spotlight.pause();
+// 	};
+
+// 	showCompleteDialog = () => {
+// 		this.hideDialog();
+// 		this.setState(() => ({completeDialogOpen: true}));
+// 		this.hideCompleteDialogJob.start();
+// 	};
+
+// 	showErrorDialog = () => {
+// 		this.hideDialog();
+// 		this.setState(() => ({errorDialogOpen: true}));
+// 	};
+
+// 	hideCompleteDialogJob = new Job(() => {
+// 		this.hideDialog();
+// 	}, 5000);
+
+// 	hideDialog = () => {
+// 		this.hideCompleteDialogJob.stop();
+// 		Spotlight.resume();
+
+// 		this.setState(() => ({
+// 			installDialogOpen: false,
+// 			completeDialogOpen: false,
+// 			errorDialogOpen: false
+// 		}));
+// 	};
+
+// 	showRemoveNotification = (appId, appTitle, ev) => {
+// 		this.hideDialog();
+
+// 		this.removingAppInfo = {
+// 			appId: appId,
+// 			title: appTitle
+// 		};
+
+// 		AppLog(ev);
+
+// 		this.setState(() => ({removeNotificationOpen: true}));
+// 	};
+
+// 	hideRemoveNotification = (param, ev) => {
+// 		AppLog(ev);
+
+// 		if (param.senderName === 'yesBtn') {
+// 			Spotlight.pause();
+// 			this.removeApp(this.removingAppInfo.appId);
+// 		}
+
+// 		this.setState(() => ({removeNotificationOpen: false}));
+// 	};
+
+// 	handleBackKey = (ev) => {
+// 		const {installDialogOpen, completeDialogOpen, errorDialogOpen, removeNotificationOpen} = this.state;
+
+// 		if (installDialogOpen) {
+// 			ev.stopPropagation();
+// 		}
+// 		if (completeDialogOpen) {
+// 			this.setState(() => ({completeDialogOpen: false}));
+// 			ev.stopPropagation();
+// 		} else if (errorDialogOpen) {
+// 			this.setState(() => ({errorDialogOpen: false}));
+// 			ev.stopPropagation();
+// 		} else if (removeNotificationOpen) {
+// 			this.setState(() => ({removeNotificationOpen: false}));
+// 			ev.stopPropagation();
+// 		} else {
+// 			if (this.props.getConfigs['support'] && this.props.getConfigs['support'].length === 1) {
+// 				this.props.launchApp({id: 'com.webos.app.installation', params: {target:"general"}});
+// 				window.close();
+// 			} else {
+// 				this.props.popPath();
+// 			}
+// 			ev.stopPropagation();
+// 		}
+
+// 		return true;
+// 	};
+
+// 	loginButtonProps (loginId) {
+// 		const buttonLabel = loginId ? $L('Logout') : $L('Login');
+// 		const buttonClickAction = loginId ? this.props.logOutFromDeveloperSite : this.enterDeveloperModeLogin;
+
+// 		return (
+// 			<Button spotlightId={'loginBtn'} size="small" onClick={buttonClickAction}>{buttonLabel}</Button>
+// 		);
+// 	}
+
+// 	installDialogProps (open) {
+// 		const dialogContent = '[' + this.installingAppInfo.title + ']' +
+// 			toIString($L('{updateType} is in progress.')).format({updateType: this.installingAppInfo.updateType === 'install' ? $L('Installation') : $L('Update')});
+
+// 		return (
+// 			<LoadingAlert open={open}>
+// 				{dialogContent} <br /> {$L('Please don’t turn off the device, and wait while process is completed.')}
+// 			</LoadingAlert>
+// 		);
+// 	}
+
+// 	// dialog props
+// 	completeDialogProps (open) {
+// 		const updateType = this.installingAppInfo.updateType;
+// 		const dialogContent = !!updateType && '[' + this.installingAppInfo.title + '] ' +
+// 				(updateType === 'install' ? $L('Installation is completed.') : $L('Update is completed.'));
+// 		return (
+// 			<Alert open={open} type="overlay" onClose={this.focusCheckForUpdateButton}>
+// 				<span>
+// 					{dialogContent}
+// 					<br />
+// 					{$L('This popup will be closed automatically in 5 seconds.')}
+// 				</span>
+// 				<buttons>
+// 					<Button size="small" onClick={this.hideDialog}>{$L('OK')}</Button>
+// 				</buttons>
+// 			</Alert>
+// 		);
+// 	}
+
+// 	errorDialogProps (open, errorStatus) {
+// 		return (
+// 			<div>
+// 				{
+// 					<Alert open={open} type="overlay" onClose={this.focusInstallButton}>
+// 						<span>
+// 							{errorStatus.errorMessage.split('\n').map((line, idx) => {
+// 								return (<div key={'devErr_' + idx}>{idx > 0 ?  <br /> : null}{line}</div>);
+// 							})}
+// 						</span>
+// 						<buttons>
+// 							<Button size="small" onClick={this.hideDialog}>{$L('OK')}</Button>
+// 						</buttons>
+// 					</Alert>
+// 				}
+// 			</div>
+// 		);
+// 	}
+
+// 	removeNotificationProps (open) {
+// 		const dialogContent = toIString($L('{app} will be deleted.')).format({app: this.removingAppInfo.title});
+// 		return (
+// 			<Alert open={open} type="overlay" onClose={this.hideRemoveNotification}>
+// 				<span>
+// 					{dialogContent} <br />
+// 					{$L('Do you want to process?')}
+// 				</span>
+// 				<buttons>
+// 					<Button size="small" onClick={this.notificationYesBtnTapped}>{$L('Yes')}</Button>
+// 					<Button size="small" onClick={this.notificationNoBtnTapped}>{$L('No')}</Button>
+// 				</buttons>
+// 			</Alert>
+// 		);
+// 	}
+
+// 	render = () => {
+// 		const {beanviserAppInfo, beanviserAppDownloadInfo, devModeAppInfo, devModeAppDownloadInfo, errorStatus, loginInfo, ...rest} = this.props;
+// 		const {beanviserServiceEnabled, installDialogOpen, completeDialogOpen, errorDialogOpen, removeNotificationOpen} = this.state;
+// 		const loginButton = this.loginButtonProps(loginInfo.loginId);
+
+// 		const installDialog = this.installDialogProps(installDialogOpen);
+// 		const completeDialog = this.completeDialogProps(completeDialogOpen);
+// 		const errorDialog = this.errorDialogProps(errorDialogOpen, errorStatus);
+// 		const removeNotification = this.removeNotificationProps(removeNotificationOpen);
+// 		const checkUpdateForBeanviserApp = this.checkBeanviserAppForUpdate;
+
+// 		delete rest.checkDownloadableApp;
+// 		delete rest.checkForUpdate;
+// 		delete rest.getAppInfo;
+// 		delete rest.getAppInstallationInfo;
+// 		delete rest.getBeanviserState;
+// 		delete rest.logOutFromDeveloperSite;
+// 		delete rest.popPath;
+// 		delete rest.pushPath;
+// 		delete rest.removeApp;
+// 		delete rest.setBeanviserState;
+// 		delete rest.getConfigs;
+
+// 		return (
+// 			<SettingsPanel title={$L('Developer Mode & Beanviser')} titleBelow={$L('Enable or disable Developer Mode & Beanviser services on this device')} headerChildren={loginButton} {...rest}>
+// 				<SettingsScroller>
+// 					<DeveloperModeItem
+// 						compId={'devmode'}
+// 						appId={this.DEVMODE_APP_ID}
+// 						appDownloadable={devModeAppDownloadInfo.appDownloadable}
+// 						appUpdatable={devModeAppDownloadInfo.appUpdatable}
+// 						loginId={loginInfo.loginId}
+// 						title={$L('Developer Mode App')}
+// 						version={devModeAppInfo.appVersion}
+// 						latestVersion={devModeAppDownloadInfo.latestVersion}
+// 						onInstall={this.installDevModeApp}
+// 						onCheckForUpdate={this.checkDevModeAppForUpdate}
+// 						onUpdate={this.updateDevModeApp}
+// 						onRemove={this.removeDevModeApp}
+// 					/>
+// 					<DeveloperModeItem
+// 						compId={'beanviser'}
+// 						appId={this.BEANVISER_APP_ID}
+// 						appDownloadable={beanviserAppDownloadInfo.appDownloadable}
+// 						appUpdatable={beanviserAppDownloadInfo.appUpdatable}
+// 						loginId={loginInfo.loginId}
+// 						selected={beanviserServiceEnabled}
+// 						title={$L('Beanviser App')}
+// 						version={beanviserAppInfo.appVersion}
+// 						latestVersion={beanviserAppDownloadInfo.latestVersion}
+// 						onInstall={this.installBeanviserApp}
+// 						onCheckForUpdate={checkUpdateForBeanviserApp}
+// 						onUpdate={this.updateBeanviserApp}
+// 						onRemove={this.removeBeanviserApp}
+// 						switchSupported         // for turning on/off service
+// 						onToggleSwitch={this.setBeanviserState}
+// 					/>
+// 				</SettingsScroller>
+// 				<CancelableDiv handleMainCancel={this.handleBackKey} >
+// 					{removeNotification}
+// 					{installDialogOpen ? installDialog : null}
+// 					{errorDialog}
+// 					{completeDialog}
+// 				</CancelableDiv>
+// 			</SettingsPanel>
+// 		);
+// 	};
+// }
+
+// DeveloperMode.propTypes = {
+// 	beanviserAppDownloadInfo: PropTypes.object,
+// 	beanviserAppInfo: PropTypes.object,
+// 	checkDownloadableApp: PropTypes.func,
+// 	checkForUpdate: PropTypes.func,
+// 	devModeAppDownloadInfo: PropTypes.object,
+// 	devModeAppInfo: PropTypes.object,
+// 	errorStatus : PropTypes.object,
+// 	getAppInfo: PropTypes.func,
+// 	getAppInstallationInfo: PropTypes.func,
+// 	getBeanviserState: PropTypes.func,
+// 	loginInfo: PropTypes.object,
+// 	logOutFromDeveloperSite: PropTypes.func,
+// 	popPath: PropTypes.func,
+// 	pushPath: PropTypes.func,
+// 	removeApp: PropTypes.func,
+// 	setBeanviserState: PropTypes.func
+// };
+
+// const mapStateToProps = (state) => {
+// 	return {
+// 		beanviserAppDownloadInfo: state.beanviserAppDownloadInfo,
+// 		beanviserAppInfo: state.beanviserAppInfo,
+// 		devModeAppDownloadInfo: state.devModeAppDownloadInfo,
+// 		devModeAppInfo: state.devModeAppInfo,
+// 		errorStatus: state.errorStatus,
+// 		loginInfo: state.loginInfo,
+// 		getConfigs: state.getConfigs
+// 	};
+// };
+
+// const mapDispatchToProps = (dispatch) => {
+// 	return {
+// 		checkDownloadableApp: () => (dispatch(DeveloperModeAction.checkDownloadableApp())),
+// 		checkForUpdate: (appId, appVer) => (dispatch(DeveloperModeAction.checkForUpdate(appId, appVer))),
+// 		getAppInfo: (appId) => (dispatch(DeveloperModeAction.getAppInfo(appId))),
+// 		getAppInstallationInfo: (appId, updateType) => (dispatch(DeveloperModeAction.getAppInstallationInfo(appId, updateType))),
+// 		getBeanviserState: () => (dispatch(DeveloperModeAction.getBeanviserState())),
+// 		logOutFromDeveloperSite: () => (dispatch(DeveloperModeAction.logOutFromDeveloperSite())),
+// 		popPath: () => (dispatch(popPath())),
+// 		pushPath: (path) => (dispatch(pushPath(path))),
+// 		setBeanviserState: (status, pauseSpotlight) => (DeveloperModeAction.setBeanviserState(status, pauseSpotlight)),
+// 		removeApp: (appId) => (dispatch(DeveloperModeAction.removeApp(appId))),
+// 		launchApp: (params) => (dispatch(launchApp(params)))
+// 	};
+// };
+
+// export default connect(mapStateToProps, mapDispatchToProps)(DeveloperMode);
+
+
+
+
+import {Component} from 'react';
+import PropTypes from 'prop-types';
+import {connect} from 'react-redux';
+
+import Job from '@enact/core/util/Job';
+import $L, {toIString} from '@enact/i18n/$L';
+
+import Button from '@enact/sandstone/Button';
+import Alert from '@enact/sandstone/Alert';
+import Cancelable from '@enact/ui/Cancelable';
+import Spotlight from '@enact/spotlight';
+
+import {pushPath, popPath, launchApp} from '../../actions';
+import * as DeveloperModeAction from '../../actions/developerModeAction';
+
+import AppLog from '../../components/AppLog';
+import DeveloperModeItem from '../../components/DeveloperModeItem';
+import SettingsPanel from '../../components/SettingsPanel';
+import SettingsScroller from '../../components/SettingsScroller';
+import NameMap from '../../constants/NameMap';
+import LoadingAlert from '../../components/LoadingAlert/LoadingAlert';
+
+const CancelableDiv = Cancelable({modal: true, onCancel: 'handleMainCancel'}, 'div');
+
+class DeveloperMode extends Component {
+	constructor (props) {
+		super(props);
+
+		// app info
+		this.installingAppInfo = {
+			appId: '',
+			title: '',
+			updateType: ''
+		};
+
+		this.removingAppInfo = {
+			appId: '',
+			title: ''
+		};
+
+		// dialog / notification state
+		this.state = {
+			beanviserServiceEnabled: false,
+			installDialogOpen: false,
+			completeDialogOpen: false,
+			errorDialogOpen: false,
+			removeNotificationOpen: false
+		};
+
+		// initial app id
+		this.DEVMODE_APP_ID = NameMap.DEVMODE_APP_ID;
+		this.BEANVISER_APP_ID = NameMap.BEANVISER_APP_ID;
+
+		this.handleBackKey = this.handleBackKey.bind(this);
+
+		// path transition
+		this.enterDeveloperModeLogin = props.pushPath.bind(this, 'DeveloperModeLogin');
+
+		// calling props
+		this.installApp = this.installApp.bind(this);
+		this.removeApp = this.removeApp.bind(this);
+		this.hideDialog = this.hideDialog.bind(this);
+
+		// check for update
+		this.checkDevModeAppForUpdate = this.checkForUpdate.bind(this, this.DEVMODE_APP_ID, props.devModeAppInfo.appVersion);
+		this.checkBeanviserAppForUpdate = this.checkForUpdate.bind(this, this.BEANVISER_APP_ID, props.beanviserAppInfo.appVersion);
+
+		// install(update) dialog
+		this.showInstallDialog = this.showInstallDialog.bind(this);
+		this.installDevModeApp = this.showInstallDialog.bind(this, this.DEVMODE_APP_ID, props.devModeAppInfo.appTitle, 'install');
+		this.installBeanviserApp = this.showInstallDialog.bind(this, this.BEANVISER_APP_ID, props.beanviserAppInfo.appTitle, 'install');
+		this.updateDevModeApp = this.showInstallDialog.bind(this, this.DEVMODE_APP_ID, props.devModeAppInfo.appTitle, 'update');
+		this.updateBeanviserApp = this.showInstallDialog.bind(this, this.BEANVISER_APP_ID, props.beanviserAppInfo.appTitle, 'update');
+
+		// complete dialog
+		this.showCompleteDialog = this.showCompleteDialog.bind(this);
+
+		// error dialog
+		this.showErrorDialog = this.showErrorDialog.bind(this);
+
+		// remove notification
+		this.showRemoveNotification = this.showRemoveNotification.bind(this);
+		this.hideRemoveNotification = this.hideRemoveNotification.bind(this);
+		this.removeDevModeApp = this.showRemoveNotification.bind(this, this.DEVMODE_APP_ID, props.devModeAppInfo.appTitle);
+		this.removeBeanviserApp = this.showRemoveNotification.bind(this, this.BEANVISER_APP_ID, props.beanviserAppInfo.appTitle);
+		this.notificationNoBtnTapped = this.hideRemoveNotification.bind(this, {senderName: 'noBtn'});
+		this.notificationYesBtnTapped = this.hideRemoveNotification.bind(this, {senderName: 'yesBtn'});
+	}
+
+	componentDidMount () {
+		Spotlight.setPointerMode(false);
+
+		this.focusToLoginButton();
+		this.props.getAppInfo(this.DEVMODE_APP_ID);
+		this.props.getAppInfo(this.BEANVISER_APP_ID);
+		this.props.getBeanviserState();
+		this.props.checkDownloadableApp();
+	}
+
+	UNSAFE_componentWillReceiveProps (nextProps) {
+		// reserved
+		if (this.props.errorStatus !== nextProps.errorStatus) {
+			if (nextProps.errorStatus.errorCode === 30) {
+				this.showCompleteDialog();
+			} else {
+				this.showErrorDialog();
+			}
+		}
+		if (this.props.devModeAppInfo.appVersion !== nextProps.devModeAppInfo.appVersion) {
+			this.checkDevModeAppForUpdate = this.checkForUpdate.bind(this, this.DEVMODE_APP_ID, nextProps.devModeAppInfo.appVersion);
+		}
+		if (this.props.beanviserAppInfo.appVersion !== nextProps.beanviserAppInfo.appVersion) {
+			this.checkBeanviserAppForUpdate = this.checkForUpdate.bind(this, this.BEANVISER_APP_ID, nextProps.beanviserAppInfo.appVersion);
+
+			if (nextProps.beanviserAppInfo.appVersion !== null && this.restartBeanviserAfterUpdate) {
+				this.setBeanviserState({selected: true});
+				this.restartBeanviserAfterUpdate = false;
+			}
+		}
+		if (this.props.beanviserAppInfo.serviceEnabled !== nextProps.beanviserAppInfo.serviceEnabled) {
+			this.setState(() => ({beanviserServiceEnabled: nextProps.beanviserAppInfo.serviceEnabled}));
+		}
+	}
+
+	componentDidUpdate (prevProps) {
+		// update spotlight after logging in/out
+		if ((prevProps.loginInfo.loginId !== this.props.loginInfo.loginId) ||
+			(prevProps.devModeAppInfo.appVersion !== this.props.devModeAppInfo.appVersion && this.props.devModeAppInfo.appVersion === null)) {
+			this.focusToLoginButton();
+		}
+	}
+
+	// function
+	installApp = (appId, updateType) => {
+		// get Download info -> Download -> Install -> Add Launchpoint (when visible false);
+		this.props.getAppInstallationInfo(appId, updateType);
+	};
+
+	checkForUpdate = (appId, appVer) => {
+		// check for update
+		this.props.checkForUpdate(appId, appVer);
+	};
+
+	removeApp = (appId) => {
+		if (appId === this.BEANVISER_APP_ID && this.state.beanviserServiceEnabled) {
+			this.setBeanviserState({selected: false}, true);	// pauses spotlight while removing is in progress
+		}
+		this.props.removeApp(appId);
+	};
+
+	setBeanviserState = (selected, pauseSpotlight) => {
+		Spotlight.pause();
+		
+		this.setState(() => ({beanviserServiceEnabled: selected}));
+		this.props.setBeanviserState(selected, pauseSpotlight);
+	};
+
+	// spotlight
+	focusToLoginButton = () => {
+		Spotlight.focus('loginBtn');
+	};
+
+	focusCheckForUpdateButton = () => {
+		const prefix = this.installingAppInfo.appId === this.DEVMODE_APP_ID ? 'devmode' : 'beanviser';
+		const node = document.querySelector(`[data-spotlight-id=${prefix}_checkForUpdateButton]`);
+
+		if (Spotlight.isSpottable(node)) {
+			Spotlight.focus(prefix + '_checkForUpdateButton');
+		}
+		this.hideDialog();
+	};
+
+	focusInstallButton = () => {
+		const prefix = this.installingAppInfo.appId === this.DEVMODE_APP_ID ? 'devmode' : 'beanviser';
+		const node = document.querySelector(`[data-spotlight-id=${prefix}_installButton]`);
+
+		if (Spotlight.isSpottable(node)) {
+			Spotlight.focus(prefix + '_installButton');
+		} else {
+			this.focusToLoginButton();
+		}
+		this.hideDialog();
+	};
+
+	// render
+	showInstallDialog = (appId, appTitle, updateType, ev) => {
+		this.hideDialog();
+
+		this.installingAppInfo = {
+			appId: appId,
+			title: appTitle,
+			updateType: updateType
+		};
+
+		AppLog(ev);
+
+		if (appId === this.BEANVISER_APP_ID && updateType === 'update') {
+			this.restartBeanviserAfterUpdate = this.state.beanviserServiceEnabled;
+			this.setBeanviserState({selected: false}, true);
+		}
+
+		this.installApp(appId, updateType);
+		this.setState(() => ({installDialogOpen: true}));
+		Spotlight.pause();
+	};
+
+	showCompleteDialog = () => {
+		this.hideDialog();
+		this.setState(() => ({completeDialogOpen: true}));
+		this.hideCompleteDialogJob.start();
+	};
+
+	showErrorDialog = () => {
+		this.hideDialog();
+		this.setState(() => ({errorDialogOpen: true}));
+	};
+
+	hideCompleteDialogJob = new Job(() => {
+		this.hideDialog();
+	}, 5000);
+
+	hideDialog = () => {
+		this.hideCompleteDialogJob.stop();
+		Spotlight.resume();
+
+		this.setState(() => ({
+			installDialogOpen: false,
+			completeDialogOpen: false,
+			errorDialogOpen: false
+		}));
+	};
+
+	showRemoveNotification = (appId, appTitle, ev) => {
+		this.hideDialog();
+
+		this.removingAppInfo = {
+			appId: appId,
+			title: appTitle
+		};
+
+		AppLog(ev);
+
+		this.setState(() => ({removeNotificationOpen: true}));
+	};
+
+	hideRemoveNotification = (param, ev) => {
+		AppLog(ev);
+
+		if (param.senderName === 'yesBtn') {
+			Spotlight.pause();
+			this.removeApp(this.removingAppInfo.appId);
+		}
+
+		this.setState(() => ({removeNotificationOpen: false}));
+	};
+
+	handleBackKey = (ev) => {
+		const {installDialogOpen, completeDialogOpen, errorDialogOpen, removeNotificationOpen} = this.state;
+
+		if (installDialogOpen) {
+			ev.stopPropagation();
+		}
+		if (completeDialogOpen) {
+			this.setState(() => ({completeDialogOpen: false}));
+			ev.stopPropagation();
+		} else if (errorDialogOpen) {
+			this.setState(() => ({errorDialogOpen: false}));
+			ev.stopPropagation();
+		} else if (removeNotificationOpen) {
+			this.setState(() => ({removeNotificationOpen: false}));
+			ev.stopPropagation();
+		} else {
+			if (this.props.getConfigs['support'] && this.props.getConfigs['support'].length === 1) {
+				this.props.launchApp({id: 'com.webos.app.installation', params: {target:"general"}});
+				window.close();
+			} else {
+				this.props.popPath();
+			}
+			ev.stopPropagation();
+		}
+
+		return true;
+	};
+
+	loginButtonProps (loginId) {
+		const buttonLabel = loginId ? $L('Logout') : $L('Login');
+		const buttonClickAction = loginId ? this.props.logOutFromDeveloperSite : this.enterDeveloperModeLogin;
+
+		return (
+			<Button spotlightId={'loginBtn'} size="small" onClick={buttonClickAction}>{buttonLabel}</Button>
+		);
+	}
+
+	installDialogProps (open) {
+		const dialogContent = '[' + this.installingAppInfo.title + ']' +
+			toIString($L('{updateType} is in progress.')).format({updateType: this.installingAppInfo.updateType === 'install' ? $L('Installation') : $L('Update')});
+
+		return (
+			<LoadingAlert open={open}>
+				{dialogContent} <br /> {$L('Please don’t turn off the device, and wait while process is completed.')}
+			</LoadingAlert>
+		);
+	}
+
+	// dialog props
+	completeDialogProps (open) {
+		const updateType = this.installingAppInfo.updateType;
+		const dialogContent = !!updateType && '[' + this.installingAppInfo.title + '] ' +
+				(updateType === 'install' ? $L('Installation is completed.') : $L('Update is completed.'));
+		return (
+			<Alert open={open} type="overlay" onClose={this.focusCheckForUpdateButton}>
+				<span>
+					{dialogContent}
+					<br />
+					{$L('This popup will be closed automatically in 5 seconds.')}
+				</span>
+				<buttons>
+					<Button size="small" onClick={this.hideDialog}>{$L('OK')}</Button>
+				</buttons>
+			</Alert>
+		);
+	}
+
+	errorDialogProps (open, errorStatus) {
+		return (
+			<div>
+				{
+					<Alert open={open} type="overlay" onClose={this.focusInstallButton}>
+						<span>
+							{errorStatus.errorMessage.split('\n').map((line, idx) => {
+								return (<div key={'devErr_' + idx}>{idx > 0 ?  <br /> : null}{line}</div>);
+							})}
+						</span>
+						<buttons>
+							<Button size="small" onClick={this.hideDialog}>{$L('OK')}</Button>
+						</buttons>
+					</Alert>
+				}
+			</div>
+		);
+	}
+
+	removeNotificationProps (open) {
+		const dialogContent = toIString($L('{app} will be deleted.')).format({app: this.removingAppInfo.title});
+		return (
+			<Alert open={open} type="overlay" onClose={this.hideRemoveNotification}>
+				<span>
+					{dialogContent} <br />
+					{$L('Do you want to process?')}
+				</span>
+				<buttons>
+					<Button size="small" onClick={this.notificationYesBtnTapped}>{$L('Yes')}</Button>
+					<Button size="small" onClick={this.notificationNoBtnTapped}>{$L('No')}</Button>
+				</buttons>
+			</Alert>
+		);
+	}
+
+	render = () => {
+		const {beanviserAppInfo, beanviserAppDownloadInfo, devModeAppInfo, devModeAppDownloadInfo, errorStatus, loginInfo, ...rest} = this.props;
+		const {beanviserServiceEnabled, installDialogOpen, completeDialogOpen, errorDialogOpen, removeNotificationOpen} = this.state;
+		const loginButton = this.loginButtonProps(loginInfo.loginId);
+
+		const installDialog = this.installDialogProps(installDialogOpen);
+		const completeDialog = this.completeDialogProps(completeDialogOpen);
+		const errorDialog = this.errorDialogProps(errorDialogOpen, errorStatus);
+		const removeNotification = this.removeNotificationProps(removeNotificationOpen);
+		const checkUpdateForBeanviserApp = this.checkBeanviserAppForUpdate;
+
+		delete rest.checkDownloadableApp;
+		delete rest.checkForUpdate;
+		delete rest.getAppInfo;
+		delete rest.getAppInstallationInfo;
+		delete rest.getBeanviserState;
+		delete rest.logOutFromDeveloperSite;
+		delete rest.popPath;
+		delete rest.pushPath;
+		delete rest.removeApp;
+		delete rest.setBeanviserState;
+		delete rest.getConfigs;
+
+		return (
+			<SettingsPanel title={$L('Developer Mode & Beanviser')} titleBelow={$L('Enable or disable Developer Mode & Beanviser services on this device')} headerChildren={loginButton} {...rest}>
+				<SettingsScroller>
+					<DeveloperModeItem
+						compId={'devmode'}
+						appId={this.DEVMODE_APP_ID}
+						appDownloadable={devModeAppDownloadInfo.appDownloadable}
+						appUpdatable={devModeAppDownloadInfo.appUpdatable}
+						loginId={loginInfo.loginId}
+						title={$L('Developer Mode App')}
+						version={devModeAppInfo.appVersion}
+						latestVersion={devModeAppDownloadInfo.latestVersion}
+						onInstall={this.installDevModeApp}
+						onCheckForUpdate={this.checkDevModeAppForUpdate}
+						onUpdate={this.updateDevModeApp}
+						onRemove={this.removeDevModeApp}
+					/>
+					<DeveloperModeItem
+						compId={'beanviser'}
+						appId={this.BEANVISER_APP_ID}
+						appDownloadable={beanviserAppDownloadInfo.appDownloadable}
+						appUpdatable={beanviserAppDownloadInfo.appUpdatable}
+						loginId={loginInfo.loginId}
+						selected={beanviserServiceEnabled}
+						title={$L('Beanviser App')}
+						version={beanviserAppInfo.appVersion}
+						latestVersion={beanviserAppDownloadInfo.latestVersion}
+						onInstall={this.installBeanviserApp}
+						onCheckForUpdate={checkUpdateForBeanviserApp}
+						onUpdate={this.updateBeanviserApp}
+						onRemove={this.removeBeanviserApp}
+						switchSupported         // for turning on/off service
+						onToggleSwitch={this.setBeanviserState}
+					/>
+				</SettingsScroller>
+				<CancelableDiv handleMainCancel={this.handleBackKey} >
+					{removeNotification}
+					{installDialogOpen ? installDialog : null}
+					{errorDialog}
+					{completeDialog}
+				</CancelableDiv>
+			</SettingsPanel>
+		);
+	};
+}
+
+DeveloperMode.propTypes = {
+	beanviserAppDownloadInfo: PropTypes.object,
+	beanviserAppInfo: PropTypes.object,
+	checkDownloadableApp: PropTypes.func,
+	checkForUpdate: PropTypes.func,
+	devModeAppDownloadInfo: PropTypes.object,
+	devModeAppInfo: PropTypes.object,
+	errorStatus : PropTypes.object,
+	getAppInfo: PropTypes.func,
+	getAppInstallationInfo: PropTypes.func,
+	getBeanviserState: PropTypes.func,
+	loginInfo: PropTypes.object,
+	logOutFromDeveloperSite: PropTypes.func,
+	popPath: PropTypes.func,
+	pushPath: PropTypes.func,
+	removeApp: PropTypes.func,
+	setBeanviserState: PropTypes.func
+};
+
+const mapStateToProps = (state) => {
+	return {
+		beanviserAppDownloadInfo: state.beanviserAppDownloadInfo,
+		beanviserAppInfo: state.beanviserAppInfo,
+		devModeAppDownloadInfo: state.devModeAppDownloadInfo,
+		devModeAppInfo: state.devModeAppInfo,
+		errorStatus: state.errorStatus,
+		loginInfo: state.loginInfo,
+		getConfigs: state.getConfigs
+	};
+};
+
+const mapDispatchToProps = (dispatch) => {
+	return {
+		checkDownloadableApp: () => (dispatch(DeveloperModeAction.checkDownloadableApp())),
+		checkForUpdate: (appId, appVer) => (dispatch(DeveloperModeAction.checkForUpdate(appId, appVer))),
+		getAppInfo: (appId) => (dispatch(DeveloperModeAction.getAppInfo(appId))),
+		getAppInstallationInfo: (appId, updateType) => (dispatch(DeveloperModeAction.getAppInstallationInfo(appId, updateType))),
+		getBeanviserState: () => (dispatch(DeveloperModeAction.getBeanviserState())),
+		logOutFromDeveloperSite: () => (dispatch(DeveloperModeAction.logOutFromDeveloperSite())),
+		popPath: () => (dispatch(popPath())),
+		pushPath: (path) => (dispatch(pushPath(path))),
+		setBeanviserState: (status, pauseSpotlight) => (DeveloperModeAction.setBeanviserState(status, pauseSpotlight)),
+		removeApp: (appId) => (dispatch(DeveloperModeAction.removeApp(appId))),
+		launchApp: (params) => (dispatch(launchApp(params)))
+	};
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(DeveloperMode);
