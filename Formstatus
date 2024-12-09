@@ -1,0 +1,51 @@
+// src/components/FormComponent.jsx
+import React, { useState } from "react";
+
+function FormComponent() {
+  const [pending, setPending] = useState(false); // Tracks if the form is being submitted
+  const [formStatus, setFormStatus] = useState(""); // Tracks the submission status
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    setPending(true); // Set form to pending state
+    setFormStatus(""); // Clear previous status message
+
+    const formData = new FormData(event.target);
+
+    // Log form data for debugging
+    console.log("Form Data Entries:");
+    formData.forEach((value, key) => {
+      console.log(`${key}: ${value}`);
+    });
+
+    // Simulate form submission with a timeout (replace with actual API request)
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    const name = formData.get("name");
+
+    // Simulate success or failure based on name input
+    if (name === "error") {
+      setFormStatus("Form submission failed!");
+    } else {
+      setFormStatus("Form submission successful!");
+    }
+
+    setPending(false); // Set form back to normal state after submission
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <label>
+        Name:
+        <input type="text" name="name" required />
+      </label>
+      <button type="submit" disabled={pending}>
+        {pending ? "Submitting..." : "Submit"}
+      </button>
+      {formStatus && <p>{formStatus}</p>} {/* Display form submission status */}
+    </form>
+  );
+}
+
+export default FormComponent;
