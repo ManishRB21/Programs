@@ -54,6 +54,14 @@ https://www.geeksforgeeks.org/find-whether-an-array-is-subset-of-another-array-s
 
 ---
 
+## LLD
+
+https://workat.tech/machine-coding/practice/splitwise-problem-0kp2yneec2q2
+
+https://blog.algomaster.io/p/design-a-scalable-notification-service
+
+https://lldcoding.com/
+
 # JavaScript Design Patterns
 
 ## Table of Contents
