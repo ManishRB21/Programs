@@ -52,6 +52,8 @@ https://www.geeksforgeeks.org/check-if-a-string-can-be-split-into-3-substrings-s
 
 https://www.geeksforgeeks.org/find-whether-an-array-is-subset-of-another-array-set-1/
 
+https://medium.com/double-pointer/system-design-interview-recommendation-system-design-as-used-by-youtube-netflix-etc-c457aaec3ab
+
 ---
 
 ## LLD
