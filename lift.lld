@@ -1,0 +1,138 @@
+// Elevator LLD in JavaScript
+
+class Elevator {
+    constructor(id, totalFloors, type) {
+        this.id = id;
+        this.currentFloor = 0;
+        this.totalFloors = totalFloors;
+        this.type = type; // Passenger, Service, or Private
+        this.requests = []; // Internal requests
+        this.state = "IDLE"; // MovingUp, MovingDown, or Idle
+    }
+
+    move() {
+        if (this.requests.length === 0) {
+            this.state = "IDLE";
+            return;
+        }
+        
+        const nextFloor = this.requests.shift();
+        this.state = nextFloor > this.currentFloor ? "MOVING_UP" : "MOVING_DOWN";
+        console.log(`Elevator ${this.id} is ${this.state} to floor ${nextFloor}`);
+        
+        setTimeout(() => {
+            this.currentFloor = nextFloor;
+            console.log(`Elevator ${this.id} reached floor ${this.currentFloor}`);
+            this.move();
+        }, Math.abs(nextFloor - this.currentFloor) * 1000);
+    }
+
+addRequest(floor) {
+    if (!this.requests.includes(floor)) {
+        this.requests.push(floor);
+    }
+
+    // Sort requests based on the current direction
+    this.requests.sort((a, b) => {
+        const direction = this.state === "MOVING_UP" ? 1 : -1;
+
+        // Floors in the current direction should come first
+        const diffA = direction * (a - this.currentFloor);
+        const diffB = direction * (b - this.currentFloor);
+
+        if (diffA > 0 && diffB > 0) return diffA - diffB; // Both in the same direction, prioritize closer
+        if (diffA > 0) return -1; // A is in the current direction
+        if (diffB > 0) return 1; // B is in the current direction
+
+        // Fallback: handle the opposite direction, prioritize closer
+        return Math.abs(a - this.currentFloor) - Math.abs(b - this.currentFloor);
+    });
+}
+
+}
+
+class ElevatorSystem {
+    constructor(buildingId, totalFloors, numElevators) {
+        this.buildingId = buildingId;
+        this.totalFloors = totalFloors;
+        this.elevators = Array.from({ length: numElevators }, (v, i) => new Elevator(i + 1, totalFloors, "Passenger"));
+    }
+
+    selectElevator(sourceFloor, direction) {
+    let bestElevator = null;
+    let minCost = Infinity;
+
+    for (const elevator of this.elevators) {
+        // Calculate cost: IDLE elevators prioritize proximity
+        const cost = Math.abs(elevator.currentFloor - sourceFloor);
+
+        if (elevator.state === "IDLE" && cost < minCost) {
+            minCost = cost;
+            bestElevator = elevator;
+        } else if (
+            (elevator.state === "MOVING_UP" && elevator.currentFloor < sourceFloor && direction === "UP") ||
+            (elevator.state === "MOVING_DOWN" && elevator.currentFloor > sourceFloor && direction === "DOWN")
+        ) {
+            // Elevator moving in the same direction with minimal adjustment
+            if (cost < minCost) {
+                minCost = cost;
+                bestElevator = elevator;
+            }
+        }
+    }
+
+    // Fallback: assign the closest elevator if no ideal match found
+    return bestElevator || this.elevators.reduce((closest, elevator) => {
+        return Math.abs(elevator.currentFloor - sourceFloor) <
+            Math.abs(closest.currentFloor - sourceFloor)
+            ? elevator
+            : closest;
+    });
+}
+
+
+    requestElevator(sourceFloor, direction) {
+        const elevator = this.selectElevator(sourceFloor, direction);
+        console.log(`Elevator ${elevator.id} is selected to serve the request at floor ${sourceFloor}`);
+        elevator.addRequest(sourceFloor);
+        if (elevator.state === "IDLE") elevator.move();
+    }
+}
+
+class ExternalButton {
+    constructor(floor) {
+        this.floor = floor;
+    }
+
+    press(direction, system) {
+        console.log(`External button pressed at floor ${this.floor} for direction ${direction}`);
+        system.requestElevator(this.floor, direction);
+    }
+}
+
+class InternalKeypad {
+    constructor(elevator) {
+        this.elevator = elevator;
+    }
+
+    press(destinationFloor) {
+        console.log(`Internal button pressed for floor ${destinationFloor} in Elevator ${this.elevator.id}`);
+        this.elevator.addRequest(destinationFloor);
+        if (this.elevator.state === "IDLE") this.elevator.move();
+    }
+}
+
+// Example Usage
+const buildingSystem = new ElevatorSystem("Building1", 10, 3);
+const externalButton1 = new ExternalButton(2);
+const externalButton2 = new ExternalButton(5);
+
+externalButton1.press("UP", buildingSystem);
+externalButton2.press("UP", buildingSystem);
+
+setTimeout(() => {
+    const elevator = buildingSystem.elevators[0];
+    const keypad = new InternalKeypad(elevator);
+    keypad.press(1);
+    keypad.press(6);
+}, 5000);
