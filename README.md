@@ -56,6 +56,8 @@ https://medium.com/double-pointer/system-design-interview-recommendation-system-
 
 https://blog.algomaster.io/p/design-a-scalable-notification-service
 
+https://medium.com/@akilblanchard09/monitoring-a-kubernetes-cluster-using-prometheus-and-grafana-8e0f21805ea9
+
 ---
 
 ## LLD
