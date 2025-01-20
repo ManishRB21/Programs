@@ -58,6 +58,9 @@ https://blog.algomaster.io/p/design-a-scalable-notification-service
 
 https://medium.com/@akilblanchard09/monitoring-a-kubernetes-cluster-using-prometheus-and-grafana-8e0f21805ea9
 
+https://medium.com/@tejas.shirnalkar/building-otp-and-password-inputs-with-validation-in-react-step-by-step-fda703742088
+
+
 ---
 
 ## LLD
