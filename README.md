@@ -60,7 +60,7 @@ https://medium.com/@akilblanchard09/monitoring-a-kubernetes-cluster-using-promet
 
 https://medium.com/@tejas.shirnalkar/building-otp-and-password-inputs-with-validation-in-react-step-by-step-fda703742088
 
-
+https://systemdesignschool.io/problems/topk/solution
 ---
 
 ## LLD
