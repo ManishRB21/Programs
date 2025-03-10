@@ -1,0 +1,5 @@
+Feature	Client                  (Browser WebSocket API)	              Server (ws in Node.js)
+Receiving messages	             ws.onmessage = (event) => {}	        ws.on("message", (data) => {})
+Sending messages	               ws.send("message")                  	ws.send("message")
+Handling connection open	       ws.onopen = () => {}	                ws.on("connection", (socket) => {})
+Handling connection close	       ws.onclose = () => {}	              ws.on("close", () => {})
