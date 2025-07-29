@@ -15,52 +15,32 @@ const ToggleButton = ({ initialOn = false, label = "Toggle Feature" }) => {
   };
 
   return (
-    <div className="flex items-center space-x-3">
+    <div className="toggle-wrapper">
       {/* Label for the toggle switch */}
-      <span className="text-gray-700 font-medium">{label}:</span>
+      <span className="toggle-label">{label}:</span>
 
       {/* The toggle switch container */}
       <button
         role="switch" // ARIA role for accessibility
         aria-checked={isOn} // ARIA state for accessibility
         onClick={handleClick}
-        // Main container for the toggle switch
-        // w-16: width, h-8: height, rounded-full: pill shape
-        // transition-colors: smooth background color change
-        // bg-green-500 (ON) or bg-gray-300 (OFF)
-        // focus:outline-none: remove default browser outline
-        // focus:ring-2: add a focus ring
-        // focus:ring-offset-2: offset the focus ring
-        // focus:ring-blue-500: blue focus ring
-        className={`relative flex items-center w-16 h-8 rounded-full cursor-pointer
-                    transition-colors duration-300 ease-in-out
-                    ${isOn ? 'bg-green-500' : 'bg-gray-300'}
-                    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+        // Apply base class and a conditional class for the 'on' state
+        className={`toggle-switch ${isOn ? 'toggle-switch--on' : ''}`}
       >
         {/* The toggle "thumb" (the movable circle) */}
-        {/* w-6: width, h-6: height, rounded-full: circle shape */}
-        {/* bg-white: white background */}
-        {/* shadow-md: medium shadow */}
-        {/* transform: enables translation */}
-        {/* translate-x-0 (OFF) or translate-x-8 (ON) */}
-        {/* transition-transform: smooth movement */}
+        {/* Apply base class and a conditional class for the 'on' state */}
         <span
-          className={`absolute w-6 h-6 bg-white rounded-full shadow-md
-                      transform transition-transform duration-300 ease-in-out
-                      ${isOn ? 'translate-x-8' : 'translate-x-1'}`}
+          className={`toggle-thumb ${isOn ? 'toggle-thumb--on' : ''}`}
         ></span>
 
         {/* Text labels for ON/OFF states */}
-        {/* Positioned absolutely within the track */}
         <span
-          className={`absolute left-2 text-xs font-bold transition-opacity duration-300
-                      ${isOn ? 'opacity-0' : 'opacity-100 text-gray-600'}`}
+          className={`toggle-text toggle-text--off ${isOn ? 'toggle-text--hidden' : ''}`}
         >
           OFF
         </span>
         <span
-          className={`absolute right-2 text-xs font-bold transition-opacity duration-300
-                      ${isOn ? 'opacity-100 text-white' : 'opacity-0'}`}
+          className={`toggle-text toggle-text--on ${isOn ? '' : 'toggle-text--hidden'}`}
         >
           ON
         </span>
@@ -69,24 +49,103 @@ const ToggleButton = ({ initialOn = false, label = "Toggle Feature" }) => {
   );
 };
 
-// Main App component to demonstrate the ToggleButton.
+// Main App component to demonstrate a single ToggleButton.
 const App = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4">
-      <div className="bg-white p-8 rounded-xl shadow-2xl flex flex-col items-center space-y-6">
-        <h1 className="text-3xl font-bold text-gray-800 mb-4">
-          React Toggle Switch Example
-        </h1>
+    <div className="single-toggle-container">
+      {/* Define the CSS styles directly within the component */}
+      <style>
+        {`
+        /* Container for the single toggle button */
+        .single-toggle-container {
+          min-height: 100vh;
+          background: linear-gradient(to bottom right, #3b82f6, #8b5cf6); /* from-blue-500 to-purple-600 */
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 1rem; /* p-4 */
+        }
 
-        {/* Example 1: Default Toggle Switch */}
-        <ToggleButton />
+        /* Styles for the ToggleButton component */
+        .toggle-wrapper {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem; /* space-x-3 */
+          background-color: white; /* Added background for the single button */
+          padding: 2rem; /* Added padding */
+          border-radius: 0.75rem; /* Added rounded corners */
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Added shadow */
+        }
 
-        {/* Example 2: Toggle Switch with initial state ON */}
-        <ToggleButton initialOn={true} label="Notifications" />
+        .toggle-label {
+          color: #4b5563; /* text-gray-700 */
+          font-weight: 500; /* font-medium */
+        }
 
-        {/* Example 3: Another Toggle Switch with a custom label */}
-        <ToggleButton label="Dark Mode" />
-      </div>
+        .toggle-switch {
+          position: relative;
+          display: flex;
+          align-items: center;
+          width: 4rem; /* w-16 */
+          height: 2rem; /* h-8 */
+          border-radius: 9999px; /* rounded-full */
+          cursor: pointer;
+          background-color: #d1d5db; /* bg-gray-300 */
+          transition: background-color 0.3s ease-in-out;
+          border: none; /* Remove default button border */
+          outline: none; /* Remove default button outline */
+        }
+
+        .toggle-switch:focus {
+          box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #3b82f6; /* focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 */
+        }
+
+        .toggle-switch--on {
+          background-color: #22c55e; /* bg-green-500 */
+        }
+
+        .toggle-thumb {
+          position: absolute;
+          width: 1.5rem; /* w-6 */
+          height: 1.5rem; /* h-6 */
+          background-color: white;
+          border-radius: 9999px; /* rounded-full */
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+          transform: translateX(0.25rem); /* translate-x-1 */
+          transition: transform 0.3s ease-in-out;
+        }
+
+        .toggle-thumb--on {
+          transform: translateX(2rem); /* translate-x-8 */
+        }
+
+        .toggle-text {
+          position: absolute;
+          font-size: 0.75rem; /* text-xs */
+          font-weight: 700; /* font-bold */
+          transition: opacity 0.3s ease-in-out;
+        }
+
+        .toggle-text--off {
+          left: 0.5rem; /* left-2 */
+          color: #4b5563; /* text-gray-600 */
+          opacity: 1;
+        }
+
+        .toggle-text--on {
+          right: 0.5rem; /* right-2 */
+          color: white; /* text-white */
+          opacity: 0;
+        }
+
+        .toggle-text--hidden {
+          opacity: 0;
+        }
+        `}
+      </style>
+
+      {/* Render only one ToggleButton directly */}
+      <ToggleButton label="Feature Toggle" initialOn={true} />
     </div>
   );
 };
