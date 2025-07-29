@@ -1,0 +1,94 @@
+import React, { useState } from 'react';
+
+// ToggleButton Component: A reusable button that can be toggled between ON and OFF states.
+const ToggleButton = ({ initialOn = false, label = "Toggle Feature" }) => {
+  // Use useState hook to manage the 'isOn' state of the button.
+  // 'isOn' is a boolean that determines if the toggle is currently active (ON) or inactive (OFF).
+  const [isOn, setIsOn] = useState(initialOn);
+
+  // Function to handle the click event on the toggle switch.
+  // It flips the current 'isOn' state.
+  const handleClick = () => {
+    setIsOn(!isOn);
+    // In a real application, you might also call a prop function here
+    // to notify a parent component about the state change, e.g., onToggle(id, !isOn);
+  };
+
+  return (
+    <div className="flex items-center space-x-3">
+      {/* Label for the toggle switch */}
+      <span className="text-gray-700 font-medium">{label}:</span>
+
+      {/* The toggle switch container */}
+      <button
+        role="switch" // ARIA role for accessibility
+        aria-checked={isOn} // ARIA state for accessibility
+        onClick={handleClick}
+        // Main container for the toggle switch
+        // w-16: width, h-8: height, rounded-full: pill shape
+        // transition-colors: smooth background color change
+        // bg-green-500 (ON) or bg-gray-300 (OFF)
+        // focus:outline-none: remove default browser outline
+        // focus:ring-2: add a focus ring
+        // focus:ring-offset-2: offset the focus ring
+        // focus:ring-blue-500: blue focus ring
+        className={`relative flex items-center w-16 h-8 rounded-full cursor-pointer
+                    transition-colors duration-300 ease-in-out
+                    ${isOn ? 'bg-green-500' : 'bg-gray-300'}
+                    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+      >
+        {/* The toggle "thumb" (the movable circle) */}
+        {/* w-6: width, h-6: height, rounded-full: circle shape */}
+        {/* bg-white: white background */}
+        {/* shadow-md: medium shadow */}
+        {/* transform: enables translation */}
+        {/* translate-x-0 (OFF) or translate-x-8 (ON) */}
+        {/* transition-transform: smooth movement */}
+        <span
+          className={`absolute w-6 h-6 bg-white rounded-full shadow-md
+                      transform transition-transform duration-300 ease-in-out
+                      ${isOn ? 'translate-x-8' : 'translate-x-1'}`}
+        ></span>
+
+        {/* Text labels for ON/OFF states */}
+        {/* Positioned absolutely within the track */}
+        <span
+          className={`absolute left-2 text-xs font-bold transition-opacity duration-300
+                      ${isOn ? 'opacity-0' : 'opacity-100 text-gray-600'}`}
+        >
+          OFF
+        </span>
+        <span
+          className={`absolute right-2 text-xs font-bold transition-opacity duration-300
+                      ${isOn ? 'opacity-100 text-white' : 'opacity-0'}`}
+        >
+          ON
+        </span>
+      </button>
+    </div>
+  );
+};
+
+// Main App component to demonstrate the ToggleButton.
+const App = () => {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4">
+      <div className="bg-white p-8 rounded-xl shadow-2xl flex flex-col items-center space-y-6">
+        <h1 className="text-3xl font-bold text-gray-800 mb-4">
+          React Toggle Switch Example
+        </h1>
+
+        {/* Example 1: Default Toggle Switch */}
+        <ToggleButton />
+
+        {/* Example 2: Toggle Switch with initial state ON */}
+        <ToggleButton initialOn={true} label="Notifications" />
+
+        {/* Example 3: Another Toggle Switch with a custom label */}
+        <ToggleButton label="Dark Mode" />
+      </div>
+    </div>
+  );
+};
+
+export default App;
