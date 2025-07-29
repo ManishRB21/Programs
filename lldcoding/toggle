@@ -151,3 +151,111 @@ const App = () => {
 };
 
 export default App;
+
+
+///////////////////////////////////////
+
+
+import React, { useState } from 'react';
+
+// ToggleButton Component: A reusable button that can be toggled between ON and OFF states.
+const ToggleButton = ({ initialOn = false, label = "Toggle Feature" }) => {
+  // Use useState hook to manage the 'isOn' state of the button.
+  // 'isOn' is a boolean that determines if the toggle is currently active (ON) or inactive (OFF).
+  const [isOn, setIsOn] = useState(initialOn);
+
+  // Function to handle the click event on the toggle switch.
+  // It flips the current 'isOn' state.
+  const handleClick = () => {
+    setIsOn(!isOn);
+    // In a real application, you might also call a prop function here
+    // to notify a parent component about the state change, e.g., onToggle(id, !isOn);
+  };
+
+  return (
+    <div className="toggle-wrapper">
+      {/* Label for the toggle switch */}
+      <span className="toggle-label">{label}:</span>
+
+      {/* The toggle button */}
+      <button
+        role="switch" // ARIA role for accessibility
+        aria-checked={isOn} // ARIA state for accessibility
+        onClick={handleClick}
+        // Apply base class and a conditional class for the 'on' state
+        className={`simple-toggle-button ${isOn ? 'simple-toggle-button--on' : ''}`}
+      >
+        {/* Display ON/OFF text directly inside the button */}
+        {isOn ? 'ON' : 'OFF'}
+      </button>
+    </div>
+  );
+};
+
+// Main App component to demonstrate a single ToggleButton.
+const App = () => {
+  return (
+    <div className="single-toggle-container">
+      {/* Define the CSS styles directly within the component */}
+      <style>
+        {`
+        /* Container for the single toggle button */
+        .single-toggle-container {
+          min-height: 100vh;
+          background: linear-gradient(to bottom right, #3b82f6, #8b5cf6); /* from-blue-500 to-purple-600 */
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 1rem; /* p-4 */
+        }
+
+        /* Styles for the ToggleButton component */
+        .toggle-wrapper {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem; /* space-x-3 */
+          background-color: white; /* Added background for the single button */
+          padding: 2rem; /* Added padding */
+          border-radius: 0.75rem; /* Added rounded corners */
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Added shadow */
+        }
+
+        .toggle-label {
+          color: #4b5563; /* text-gray-700 */
+          font-weight: 500; /* font-medium */
+        }
+
+        /* Simplified styles for the toggle button */
+        .simple-toggle-button {
+          padding: 0.75rem 1.5rem; /* py-3 px-6 */
+          border-radius: 9999px; /* rounded-full */
+          font-weight: 600; /* font-semibold */
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+          transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+          border: none; /* Remove default button border */
+          outline: none; /* Remove default button outline */
+          cursor: pointer;
+          background-color: #d1d5db; /* Default OFF state color */
+          color: #374151; /* Default OFF state text color */
+        }
+
+        .simple-toggle-button--on {
+          background-color: #22c55e; /* ON state color */
+          color: white; /* ON state text color */
+        }
+
+        .simple-toggle-button:focus {
+          box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #3b82f6; /* Focus ring */
+        }
+
+        /* Removed styles for toggle-switch, toggle-thumb, toggle-text as they are no longer used */
+        `}
+      </style>
+
+      {/* Render only one ToggleButton directly */}
+      <ToggleButton label="Feature Toggle" initialOn={true} />
+    </div>
+  );
+};
+
+export default App;
